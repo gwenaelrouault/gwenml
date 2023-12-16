@@ -24,14 +24,12 @@ struct ScreenConfiguration {
 }
 
 fn main() {
-    let mut player = player::Player {
-        speed : Vector2f::new(0.1, 0.)
-    };
+    
     let screen_conf = ScreenConfiguration {
         view_size : Vector2f::new(800., 600.),
         view_center : Vector2f::new(400., 300.),
         ratio : 2.5,
-        aa_level : 0,
+        aa_level : 1,
         width : 800,
         height : 600,
     };
@@ -55,6 +53,24 @@ fn main() {
     arena_sprite.set_texture(&texture, true);
     let mut arena = arena::Arena::new(arena_sprite);
 
+    let mut texture_player = Texture::new().unwrap();
+    let mut current_player_sprite_rect = IntRect::new(0, 0, 150, 150);
+    texture_player
+        .load_from_file(
+            "resources/spriteHero1.png",
+            IntRect::new(0, 0, 150 * 3, 150),
+        )
+        .unwrap();
+    let mut player_sprite = Sprite::new();
+    player_sprite.set_texture(&texture_player, true);
+    player_sprite.set_texture_rect(current_player_sprite_rect);
+    player_sprite.set_scale(Vector2f::new(0.7, 0.7));
+    let mut player = player::Player {
+        position : Vector2f::new(120.,100.),
+        speed : Vector2f::new(0.1,0.),
+        sprite : player_sprite,
+    };
+    
     let context_settings = ContextSettings {
         antialiasing_level: screen_conf.aa_level,
         ..Default::default()
@@ -65,9 +81,10 @@ fn main() {
         Style::CLOSE,
         &context_settings,
     );
+    //window.set_framerate_limit(60);
     window.set_vertical_sync_enabled(true);
     let mut view = View::new(screen_conf.view_center, screen_conf.view_size);
-    view.set_viewport(FloatRect::new(0., 0., 2.5, 2.5));
+    view.set_viewport(FloatRect::new(0., 0., screen_conf.ratio, screen_conf.ratio));
     window.set_view(&view);
 
     let mut engine = engine::MauriceFight2dEngine {

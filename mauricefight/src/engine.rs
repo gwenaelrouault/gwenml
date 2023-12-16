@@ -15,7 +15,7 @@ pub struct MauriceFight2dEngine<'a> {
     pub window: RenderWindow,
     pub view: SfBox<View>,
     pub arena: Arena<'a>,
-    pub player: Player,
+    pub player: Player<'a>,
 }
 
 impl<'a> MauriceFight2dEngine<'a> {
@@ -23,9 +23,15 @@ impl<'a> MauriceFight2dEngine<'a> {
         self.arena.draw(&mut self.window);
     }
 
+    fn draw_update_frame_player(&mut self) {
+        self.player.draw(&mut self.window);
+    }
+
     fn draw_update_frame(&mut self) {
         self.draw_update_frame_arena();
+       
         self.view.move_(self.player.speed);
+        self.draw_update_frame_player();
         self.window.set_view(&self.view);
     }
 
