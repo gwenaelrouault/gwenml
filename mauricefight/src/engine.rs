@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::arena::Arena;
 use crate::player::Player;
 use sfml::SfBox;
@@ -16,6 +17,7 @@ pub struct MauriceFight2dEngine<'a> {
     pub view: SfBox<View>,
     pub arena: Arena<'a>,
     pub player: Player<'a>,
+    pub timer : SfBox<Clock>
 }
 
 impl<'a> MauriceFight2dEngine<'a> {

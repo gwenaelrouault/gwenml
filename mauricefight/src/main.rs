@@ -49,6 +49,7 @@ fn main() {
             ),
         )
         .unwrap();
+    texture.set_smooth(true);
     let mut arena_sprite = Sprite::new();
     arena_sprite.set_texture(&texture, true);
     let mut arena = arena::Arena::new(arena_sprite);
@@ -69,6 +70,9 @@ fn main() {
         position : Vector2f::new(120.,100.),
         speed : Vector2f::new(0.1,0.),
         sprite : player_sprite,
+        state : player::State::default(),
+        actions : Vec::new(),
+        clock : Clock::start()
     };
     
     let context_settings = ContextSettings {
@@ -87,11 +91,14 @@ fn main() {
     view.set_viewport(FloatRect::new(0., 0., screen_conf.ratio, screen_conf.ratio));
     window.set_view(&view);
 
+    let mut timer = Clock::start();
+
     let mut engine = engine::MauriceFight2dEngine {
         window,
         view,
         arena,
         player,
+        timer,
     };
 
     loop {
