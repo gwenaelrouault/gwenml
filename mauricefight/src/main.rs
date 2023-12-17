@@ -66,8 +66,9 @@ fn main() {
     player_sprite.set_texture(&texture_player, true);
     player_sprite.set_texture_rect(current_player_sprite_rect);
     player_sprite.set_scale(Vector2f::new(0.7, 0.7));
+    player_sprite.set_origin(Vector2f::new(75.0, 75.0));
     let mut player = player::Player {
-        position : Vector2f::new(120.,100.),
+        position : Vector2f::new(120.,150.),
         speed : Vector2f::new(0.1,0.),
         sprite : player_sprite,
         state : player::State::default(),

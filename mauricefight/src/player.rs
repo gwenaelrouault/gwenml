@@ -17,7 +17,7 @@ pub enum Action {
     ATTACK1,
 }
 
-struct ActionDesc {
+pub struct ActionDesc {
     pub name : Action,
     pub count : i32,
     pub sprite_index : i32,
@@ -76,6 +76,7 @@ impl<'a> Player<'a> {
         self.position.x = self.position.x +  self.speed.x;
         self.position.y = self.position.y + self.speed.y;
         self.sprite.set_position(self.position);
+        self.sprite.set_scale(Vector2f::new(-0.7, 0.7));
     }
 
     fn get_action_desc(&mut self, action : Action) -> ActionDesc {
