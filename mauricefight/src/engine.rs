@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use crate::arena::Arena;
 use crate::player::Player;
+use crate::player::Action;
 use sfml::SfBox;
 use sfml::{
     audio::{Sound, SoundBuffer, SoundSource},
@@ -31,7 +32,6 @@ impl<'a> MauriceFight2dEngine<'a> {
 
     fn draw_update_frame(&mut self) {
         self.draw_update_frame_arena();
-       
         self.view.move_(self.player.speed);
         self.draw_update_frame_player();
         self.window.set_view(&self.view);
@@ -41,6 +41,36 @@ impl<'a> MauriceFight2dEngine<'a> {
         self.window.clear(Color::BLACK);
         self.draw_update_frame();
         self.window.display();
+    }
+
+    pub fn process_input_event(&mut self, e : Event) {
+        match e {
+            Event::KeyPressed {
+                code: Key::Right,..
+            } => {
+                println!("RIGHT");
+                self.player.do_something(Action::WALKING_RIGHT);
+            },
+            Event::KeyPressed {
+                code: Key::Left,..
+            } => {
+                println!("LEFT");
+                self.player.do_something(Action::WALKING_LEFT);
+            },
+            Event::KeyPressed {
+                code: Key::Down,..
+            } => {
+                println!("DOWN");
+                self.player.do_something(Action::CROUCH);
+            },
+            Event::KeyPressed {
+                code: Key::Up,..
+            } => {
+                println!("UP");
+                self.player.do_something(Action::STANDING);
+            },
+            _ => {}
+        }
     }
 
 }

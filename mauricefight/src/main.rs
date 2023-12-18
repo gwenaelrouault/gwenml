@@ -23,15 +23,31 @@ struct ScreenConfiguration {
     height : u32,
 }
 
+struct SpriteConfiguration {
+    nb_frames : i32,
+    size : i32,
+    scale : f32,
+    x_center : f32,
+    y_center : f32,
+}
+
 fn main() {
     
     let screen_conf = ScreenConfiguration {
         view_size : Vector2f::new(800., 600.),
         view_center : Vector2f::new(400., 300.),
-        ratio : 2.5,
-        aa_level : 1,
+        ratio : 2.7,
+        aa_level : 0,
         width : 800,
         height : 600,
+    };
+
+    let sprite_conf = SpriteConfiguration {
+        nb_frames : 32,
+        size : 100,
+        scale : 0.75,
+        x_center : 50.,
+        y_center : 50.
     };
 
     let background_arena: Image = Image::from_file("resources/ARENA1.png").unwrap();
@@ -52,24 +68,25 @@ fn main() {
     texture.set_smooth(true);
     let mut arena_sprite = Sprite::new();
     arena_sprite.set_texture(&texture, true);
-    let mut arena = arena::Arena::new(arena_sprite);
-
+    let arena = arena::Arena::new(arena_sprite);
     let mut texture_player = Texture::new().unwrap();
-    let mut current_player_sprite_rect = IntRect::new(0, 0, 150, 150);
+    let current_player_sprite_rect = IntRect::new(0, 0, sprite_conf.size, sprite_conf.size);
     texture_player
         .load_from_file(
-            "resources/spriteHero1.png",
-            IntRect::new(0, 0, 150 * 3, 150),
+            "resources/spriteHero.png",
+            IntRect::new(0, 0, sprite_conf.size * sprite_conf.nb_frames, sprite_conf.size),
         )
         .unwrap();
+    texture_player.set_smooth(true);
     let mut player_sprite = Sprite::new();
     player_sprite.set_texture(&texture_player, true);
     player_sprite.set_texture_rect(current_player_sprite_rect);
-    player_sprite.set_scale(Vector2f::new(0.7, 0.7));
-    player_sprite.set_origin(Vector2f::new(75.0, 75.0));
-    let mut player = player::Player {
+    player_sprite.set_scale(Vector2f::new(sprite_conf.scale, sprite_conf.scale));
+    player_sprite.set_origin(Vector2f::new(sprite_conf.x_center, sprite_conf.y_center));
+    
+    let player = player::Player {
         position : Vector2f::new(120.,150.),
-        speed : Vector2f::new(0.1,0.),
+        speed : Vector2f::new(0.,0.),
         sprite : player_sprite,
         state : player::State::default(),
         actions : Vec::new(),
@@ -92,8 +109,7 @@ fn main() {
     view.set_viewport(FloatRect::new(0., 0., screen_conf.ratio, screen_conf.ratio));
     window.set_view(&view);
 
-    let mut timer = Clock::start();
-
+    let timer = Clock::start();
     let mut engine = engine::MauriceFight2dEngine {
         window,
         view,
@@ -109,7 +125,9 @@ fn main() {
                 | Event::KeyPressed {
                     code: Key::Escape, ..
                 } => return,
-                _ => {}
+                _ => {
+                    engine.process_input_event(event);
+                }
             }
         }
         engine.render_frame();
