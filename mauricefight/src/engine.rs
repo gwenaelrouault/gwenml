@@ -78,7 +78,7 @@ impl<'a> MauriceFight2dEngine<'a> {
             Event::KeyReleased {
                 code: Key::Down,..
             } => {
-                println!("KEY PUSH:KEY:DOWN");
+                println!("KEY PUSH:DOWN rel");
                 self.player.do_something(Action::EndCrouch);
             },
             Event::KeyPressed {

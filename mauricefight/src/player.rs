@@ -92,7 +92,7 @@ pub struct State {
 
 impl State {
     pub fn is_done(&self) -> bool {
-        self.step >= self.current_action.count
+        self.step >= self.current_action.count - 1
     }
 
     pub fn new(action: &ActionDesc) -> Self {
@@ -147,7 +147,7 @@ impl<'a> Player<'a> {
                 sprite_index: 0,
                 sprite_len: 100,
                 delay: 100,
-                speed: 0.25,
+                speed: 0.3,
                 tempo: ActionTempo::Continu,
             },
             RunAction::Crouch => ActionDesc {
@@ -155,7 +155,7 @@ impl<'a> Player<'a> {
                 count: 1,
                 sprite_index: 20,
                 sprite_len: 100,
-                delay: 100,
+                delay: 1000,
                 speed: 0.,
                 tempo: ActionTempo::Continu,
             },
@@ -174,8 +174,14 @@ impl<'a> Player<'a> {
     fn get_current_action_from_input(&mut self, action: Action) -> (RunAction, Direction) {
         println!("INPUT - get_current_action_from_input {:?}", action);
         match action {
-            Action::Crouch => self.input_state.flag_crouch = true,
-            Action::EndCrouch => self.input_state.flag_crouch = false,
+            Action::Crouch => {
+                println!("KEY POP - CROUCH");
+                self.input_state.flag_crouch = true;
+            }
+            Action::EndCrouch => {
+                println!("KEY POP - CROUCH rel");
+                self.input_state.flag_crouch = false;
+            }
             Action::WalkingLeft => {
                 println!("KEY POP - LEFT");
                 self.input_state.flag_move = true;
@@ -223,7 +229,6 @@ impl<'a> Player<'a> {
                     (self.running_action.clone(), self.running_direction.clone())
                 }
             };
-            //println!("CURRENT {:?} / NEW {:?}", self.running_action, to_perform);
             match to_perform {
                 (_r, _d) if self.running_action != _r || self.running_direction != _d => {
                     self.running_direction = _d;
@@ -234,12 +239,11 @@ impl<'a> Player<'a> {
                     self.speed.x = match self.running_direction {
                         Direction::Left => -1. * self.state.current_action.speed,
                         _ => self.state.current_action.speed,
-                    }
+                    };
+                    self.clock.restart();
                 }
                 _ => {
-                    if self.clock.elapsed_time().as_milliseconds()
-                        >= self.state.current_action.delay
-                    {
+                    if self.clock.elapsed_time().as_milliseconds() >= self.state.current_action.delay {
                         if self.state.is_done() && self.state.current_action.is_repeated() {
                             self.state.step = 0;
                         } else {
