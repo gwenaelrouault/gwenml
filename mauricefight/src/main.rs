@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use player::{InputState, Player};
 use sfml::SfBox;
 use 
@@ -91,7 +92,7 @@ fn main() {
         sprite : player_sprite,
         state : player::State::default(),
         input_state : InputState::new(),
-        actions : Vec::new(),
+        actions : VecDeque::new(),
         clock : Clock::start(),
         running_action : player::RunAction::Standing,
         running_direction : player::Direction::Right,
