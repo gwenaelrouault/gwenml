@@ -1,3 +1,4 @@
+use egui_sfml::SfEgui;
 use std::collections::VecDeque;
 use player::InputState;
 use sfml::SfBox;
@@ -96,6 +97,7 @@ fn main() {
         clock : Clock::start(),
         running_action : player::RunAction::Standing,
         running_direction : player::Direction::Right,
+        ko : true,
     };
     
     let context_settings = ContextSettings {

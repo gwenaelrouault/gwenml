@@ -20,6 +20,7 @@ pub enum Action {
     EndWalkingLeft,
     Crouch,
     EndCrouch,
+    Ko,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -27,6 +28,7 @@ pub enum RunAction {
     Standing,
     Walking,
     Crouch,
+    Ko,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -128,6 +130,7 @@ pub struct Player<'a> {
     pub clock: SfBox<Clock>,
     pub running_action: RunAction,
     pub running_direction: Direction,
+    pub ko : bool,
 }
 
 impl<'a> Player<'a> {
@@ -159,12 +162,21 @@ impl<'a> Player<'a> {
                 speed: 0.,
                 tempo: ActionTempo::Continu,
             },
+            RunAction::Ko => ActionDesc {
+                name: RunAction::Ko,
+                count: 3,
+                sprite_index: 21,
+                sprite_len: 100,
+                delay: 10000,
+                speed: 0.,
+                tempo: ActionTempo::Immediate,
+            },
             _ => ActionDesc {
                 name: RunAction::Standing,
                 count: 4,
                 sprite_index: 5,
                 sprite_len: 100,
-                delay: 100,
+                delay: 150,
                 speed: 0.,
                 tempo: ActionTempo::Infinite,
             },
@@ -200,6 +212,11 @@ impl<'a> Player<'a> {
                 println!("KEY POP - RIGHT rel");
                 self.input_state.flag_move = false;
             },
+            Action::Ko => {
+                println!("KEY POP - KO");
+                self.input_state.flag_move = false;
+                self.ko = true;
+            },
             _ => {}
         }
         match self.input_state {
@@ -213,6 +230,32 @@ impl<'a> Player<'a> {
             } => (RunAction::Walking, self.input_state.direction),
             _ => (RunAction::Standing, self.input_state.direction),
         }
+    }
+
+    fn update_sprite(&mut self) {
+        let current_player_sprite_rect = IntRect::new(
+            (self.state.current_action.sprite_index + self.state.step)
+                * self.state.current_action.sprite_len,
+            0,
+            self.state.current_action.sprite_len,
+            self.state.current_action.sprite_len,
+        );
+        self.sprite.set_texture_rect(current_player_sprite_rect);
+    }
+
+    fn update_sprite_sequence(&mut self, new_sequence : bool) {
+        if !new_sequence {        
+            if self.clock.elapsed_time().as_milliseconds() >= self.state.current_action.delay {
+                if self.state.is_done() && self.state.current_action.is_repeated() {
+                    self.state.step = 0;
+                } 
+                else if !self.state.is_done() {
+                     self.state.step = self.state.step + 1;
+                }
+                self.clock.restart();    
+            }
+        }
+        
     }
 
     fn perform_action(&mut self) {
@@ -240,32 +283,18 @@ impl<'a> Player<'a> {
                         Direction::Left => -1. * self.state.current_action.speed,
                         _ => self.state.current_action.speed,
                     };
-                    self.clock.restart();
+                    self.update_sprite_sequence(true);
                 }
                 _ => {
-                    if self.clock.elapsed_time().as_milliseconds() >= self.state.current_action.delay {
-                        if self.state.is_done() && self.state.current_action.is_repeated() {
-                            self.state.step = 0;
-                        } else {
-                            self.state.step = self.state.step + 1;
-                        }
-                        self.clock.restart();
-                    }
+                    self.update_sprite_sequence(false);
                 }
             }
         }
-        let current_player_sprite_rect = IntRect::new(
-            (self.state.current_action.sprite_index + self.state.step)
-                * self.state.current_action.sprite_len,
-            0,
-            self.state.current_action.sprite_len,
-            self.state.current_action.sprite_len,
-        );
-        self.sprite.set_texture_rect(current_player_sprite_rect);
     }
 
     pub fn draw(&mut self, window: &mut RenderWindow) {
         self.perform_action();
+        self.update_sprite();
         self.update_position();
         window.draw(&self.sprite);
     }
