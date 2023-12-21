@@ -49,25 +49,43 @@ impl<'a> MauriceFight2dEngine<'a> {
                 code: Key::Right,..
             } => {
                 println!("RIGHT");
-                self.player.do_something(Action::WALKING_RIGHT);
+                self.player.do_something(Action::WalkingRight);
+            },
+            Event::KeyReleased {
+                code: Key::Right,..
+            } => {
+                println!("RIGHT rel");
+                self.player.do_something(Action::EndWalkingRight);
             },
             Event::KeyPressed {
                 code: Key::Left,..
             } => {
                 println!("LEFT");
-                self.player.do_something(Action::WALKING_LEFT);
+                self.player.do_something(Action::WalkingLeft);
+            },
+            Event::KeyReleased {
+                code: Key::Left,..
+            } => {
+                println!("LEFT rel");
+                self.player.do_something(Action::EndWalkingLeft);
             },
             Event::KeyPressed {
                 code: Key::Down,..
             } => {
                 println!("DOWN");
-                self.player.do_something(Action::CROUCH);
+                self.player.do_something(Action::Crouch);
+            },
+            Event::KeyReleased {
+                code: Key::Down,..
+            } => {
+                println!("DOWN");
+                self.player.do_something(Action::EndCrouch);
             },
             Event::KeyPressed {
                 code: Key::Up,..
             } => {
                 println!("UP");
-                self.player.do_something(Action::STANDING);
+                self.player.do_something(Action::Standing);
             },
             _ => {}
         }

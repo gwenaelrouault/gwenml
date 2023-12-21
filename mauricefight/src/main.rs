@@ -1,3 +1,4 @@
+use player::{InputState, Player};
 use sfml::SfBox;
 use 
     sfml::{
@@ -89,8 +90,11 @@ fn main() {
         speed : Vector2f::new(0.,0.),
         sprite : player_sprite,
         state : player::State::default(),
+        input_state : InputState::new(),
         actions : Vec::new(),
-        clock : Clock::start()
+        clock : Clock::start(),
+        running_action : player::RunAction::Standing,
+        running_direction : player::Direction::Right,
     };
     
     let context_settings = ContextSettings {
@@ -117,7 +121,6 @@ fn main() {
         player,
         timer,
     };
-
     loop {
         while let Some(event) = engine.window.poll_event() {
             match event {
