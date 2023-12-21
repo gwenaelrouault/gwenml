@@ -1,5 +1,5 @@
 use std::collections::VecDeque;
-use player::{InputState, Player};
+use player::InputState;
 use sfml::SfBox;
 use 
     sfml::{

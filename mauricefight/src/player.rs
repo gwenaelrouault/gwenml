@@ -106,7 +106,7 @@ impl State {
         Self {
             current_action: ActionDesc {
                 name: RunAction::Standing,
-                count: 3,
+                count: 4,
                 sprite_index: 5,
                 sprite_len: 100,
                 delay: 150,
@@ -135,7 +135,7 @@ impl<'a> Player<'a> {
         self.position.x = self.position.x + self.speed.x;
         self.position.y = self.position.y + self.speed.y;
         self.sprite.set_position(self.position);
-        let x_scale = if self.speed.x < 0. { -0.7 } else { 0.7 };
+        let x_scale = if self.running_direction == Direction::Left { -0.7 } else { 0.7 };
         self.sprite.set_scale(Vector2f::new(x_scale, 0.7));
     }
 
@@ -161,7 +161,7 @@ impl<'a> Player<'a> {
             },
             _ => ActionDesc {
                 name: RunAction::Standing,
-                count: 3,
+                count: 4,
                 sprite_index: 5,
                 sprite_len: 100,
                 delay: 100,
