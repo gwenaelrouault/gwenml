@@ -76,7 +76,7 @@ fn main() {
     let current_player_sprite_rect = IntRect::new(0, 0, sprite_conf.size, sprite_conf.size);
     texture_player
         .load_from_file(
-            "resources/spriteHero.png",
+            "resources/spriteHero1.png",
             IntRect::new(0, 0, sprite_conf.size * sprite_conf.nb_frames, sprite_conf.size),
         )
         .unwrap();

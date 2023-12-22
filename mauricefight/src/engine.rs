@@ -88,10 +88,16 @@ impl<'a> MauriceFight2dEngine<'a> {
                 self.player.do_something(Action::Standing);
             },
             Event::KeyPressed {
-                code: Key::K,..
+                code: Key::A,..
             } => {
-                println!("KEY:KO");
-                self.player.do_something(Action::Ko);
+                println!("KEY:MDDLE KICK");
+                self.player.do_something(Action::Attack1);
+            },
+            Event::KeyPressed {
+                code: Key::B,..
+            } => {
+                println!("KEY:HIGH KICK");
+                self.player.do_something(Action::Attack2);
             },
             _ => {}
         }

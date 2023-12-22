@@ -1,15 +1,12 @@
 use std::collections::VecDeque;
 use sfml::SfBox;
 use sfml::{
-    audio::{Sound, SoundBuffer, SoundSource},
     graphics::{
-        CircleShape, Color, FloatRect, Font, Image, IntRect, RectangleShape, RenderTarget,
-        RenderWindow, Shape, Sprite, Text, Texture, Transformable, View,
+        IntRect, RenderTarget,
+        RenderWindow, Sprite, Transformable,
     },
-    system::{Clock, Time, Vector2f},
-    window::{ContextSettings, Event, Key, Style},
+    system::{Clock, Vector2f}
 };
-use std::fmt;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Action {
@@ -20,7 +17,9 @@ pub enum Action {
     EndWalkingLeft,
     Crouch,
     EndCrouch,
-    Ko,
+    Attack1,
+    Attack2,
+    EndAttack,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -28,7 +27,10 @@ pub enum RunAction {
     Standing,
     Walking,
     Crouch,
-    Ko,
+    CrouchPunch,
+    Punch,
+    MiddleKick,
+    HighKick,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -41,6 +43,13 @@ pub enum ActionTempo {
     Infinite,
     Continu,
     Immediate,
+}
+#[derive(Copy, Clone, Debug)]
+pub enum Attack {
+    NoAttack,
+    Punch,
+    HighKick,
+    MiddleKick,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -69,11 +78,13 @@ impl std::fmt::Display for ActionDesc {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct InputState {
     pub flag_crouch: bool,
     pub flag_move: bool,
     pub direction: Direction,
+    pub flag_attack : bool,
+    pub attack : Attack,
 }
 
 impl InputState {
@@ -82,6 +93,8 @@ impl InputState {
             flag_crouch: false,
             flag_move: false,
             direction: Direction::Right,
+            flag_attack : false,
+            attack : Attack::NoAttack,
         }
     }
 }
@@ -142,6 +155,10 @@ impl<'a> Player<'a> {
         self.sprite.set_scale(Vector2f::new(x_scale, 0.7));
     }
 
+    fn is_attacking(&self) -> bool {
+        self.running_action == RunAction::MiddleKick || self.running_action == RunAction::HighKick
+    }
+
     fn get_action_desc(&mut self, action: RunAction) -> ActionDesc {
         match action {
             RunAction::Walking => ActionDesc {
@@ -162,12 +179,21 @@ impl<'a> Player<'a> {
                 speed: 0.,
                 tempo: ActionTempo::Continu,
             },
-            RunAction::Ko => ActionDesc {
-                name: RunAction::Ko,
+            RunAction::MiddleKick => ActionDesc {
+                name: RunAction::MiddleKick,
                 count: 3,
-                sprite_index: 21,
+                sprite_index: 9,
                 sprite_len: 100,
-                delay: 10000,
+                delay: 100,
+                speed: 0.,
+                tempo: ActionTempo::Immediate,
+            },
+            RunAction::HighKick => ActionDesc {
+                name: RunAction::HighKick,
+                count: 8,
+                sprite_index: 24,
+                sprite_len: 100,
+                delay: 50,
                 speed: 0.,
                 tempo: ActionTempo::Immediate,
             },
@@ -180,6 +206,14 @@ impl<'a> Player<'a> {
                 speed: 0.,
                 tempo: ActionTempo::Infinite,
             },
+        }
+    }
+
+    fn get_current_attack_from_input(&self, attack: Attack) -> (RunAction, Direction) {
+        match attack {
+            Attack::HighKick => (RunAction::HighKick, self.input_state.direction),
+            Attack::MiddleKick => (RunAction::MiddleKick, self.input_state.direction),
+            _ => (RunAction::Standing, self.input_state.direction)
         }
     }
 
@@ -212,11 +246,20 @@ impl<'a> Player<'a> {
                 println!("KEY POP - RIGHT rel");
                 self.input_state.flag_move = false;
             },
-            Action::Ko => {
-                println!("KEY POP - KO");
-                self.input_state.flag_move = false;
-                self.ko = true;
+            Action::Attack1 => {
+                println!("KEY POP - ATTACK1");
+                self.input_state.flag_attack = true;
+                self.input_state.attack = Attack::MiddleKick;
             },
+            Action::Attack2 => {
+                println!("KEY POP - ATTACK1");
+                self.input_state.flag_attack = true;
+                self.input_state.attack = Attack::HighKick;
+            },
+            Action::EndAttack => {
+                self.input_state.flag_attack = false;
+                self.input_state.attack = Attack::NoAttack;
+            }
             _ => {}
         }
         match self.input_state {
@@ -226,8 +269,14 @@ impl<'a> Player<'a> {
             InputState {
                 flag_crouch: false,
                 flag_move: true,
+                flag_attack : false,
                 ..
             } => (RunAction::Walking, self.input_state.direction),
+            InputState {
+                flag_crouch: false,
+                flag_attack : true,
+                ..
+            } => self.get_current_attack_from_input(self.input_state.attack),
             _ => (RunAction::Standing, self.input_state.direction),
         }
     }
@@ -243,7 +292,14 @@ impl<'a> Player<'a> {
         self.sprite.set_texture_rect(current_player_sprite_rect);
     }
 
-    fn update_sprite_sequence(&mut self, new_sequence : bool) {
+    fn on_closed_current_action(&mut self) {
+        if self.is_attacking() {
+            self.do_something(Action::EndAttack);
+        }
+    }
+
+    fn update_sprite_sequence(&mut self, new_sequence : bool) -> bool{
+        let mut is_closed_current_action = false;
         if !new_sequence {        
             if self.clock.elapsed_time().as_milliseconds() >= self.state.current_action.delay {
                 if self.state.is_done() && self.state.current_action.is_repeated() {
@@ -252,10 +308,15 @@ impl<'a> Player<'a> {
                 else if !self.state.is_done() {
                      self.state.step = self.state.step + 1;
                 }
+                else {
+                    println!("END ACTION {:?}", self.state.current_action);
+                    is_closed_current_action = true;
+                    self.on_closed_current_action();
+                }
                 self.clock.restart();    
             }
         }
-        
+        is_closed_current_action
     }
 
     fn perform_action(&mut self) {
@@ -277,7 +338,7 @@ impl<'a> Player<'a> {
                     self.running_direction = _d;
                     self.running_action = _r;
                     let desc = self.get_action_desc(self.running_action);
-                    println!("aNEW ction {}", desc);
+                    println!("NEW Action {}", desc);
                     self.state = State::new(&desc);
                     self.speed.x = match self.running_direction {
                         Direction::Left => -1. * self.state.current_action.speed,
@@ -286,6 +347,7 @@ impl<'a> Player<'a> {
                     self.update_sprite_sequence(true);
                 }
                 _ => {
+                    println!("CURRENT Action {:?}", self.running_action);
                     self.update_sprite_sequence(false);
                 }
             }
