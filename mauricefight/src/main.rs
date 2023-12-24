@@ -1,6 +1,7 @@
 use egui_sfml::SfEgui;
+use game_configuration::GameConfiguration;
 use std::collections::VecDeque;
-use player::InputState;
+use game_inputs::InputState;
 use sfml::SfBox;
 use 
     sfml::{
@@ -16,44 +17,31 @@ use
 mod arena;
 mod player;
 mod engine;
+mod menu;
+mod game_configuration;
+mod game_events;
+mod game_common;
+mod game_inputs;
 
-struct ScreenConfiguration {
-    view_size : Vector2f,
-    view_center : Vector2f,
-    ratio : f32,
-    aa_level : u32,
-    width : u32,
-    height : u32,
-}
+fn main() {    
+    let configuration = GameConfiguration::new();
 
-struct SpriteConfiguration {
-    nb_frames : i32,
-    size : i32,
-    scale : f32,
-    x_center : f32,
-    y_center : f32,
-}
+    let background_menu = Image::from_file("resources/textures.png").unwrap();
+    let mut texture_menu = Texture::new().unwrap();
+   /* texture_menu
+        .load_from_image(
+            &background_menu,
+            IntRect::new(
+                0,
+                0,
+                menu_conf.nbTiles * menu_conf.size,
+                menu_conf.size,
+            ),
+        )
+        .unwrap();
+    texture_menu.set_smooth(true); */
 
-fn main() {
-    
-    let screen_conf = ScreenConfiguration {
-        view_size : Vector2f::new(800., 600.),
-        view_center : Vector2f::new(400., 300.),
-        ratio : 2.7,
-        aa_level : 0,
-        width : 800,
-        height : 600,
-    };
-
-    let sprite_conf = SpriteConfiguration {
-        nb_frames : 32,
-        size : 100,
-        scale : 0.75,
-        x_center : 50.,
-        y_center : 50.
-    };
-
-    let background_arena: Image = Image::from_file("resources/ARENA1.png").unwrap();
+    let background_arena = Image::from_file("resources/ARENA1.png").unwrap();
     let x_arena = background_arena.size().x;
     let y_arena = background_arena.size().y;
     let mut texture = Texture::new().unwrap();
@@ -73,19 +61,19 @@ fn main() {
     arena_sprite.set_texture(&texture, true);
     let arena = arena::Arena::new(arena_sprite);
     let mut texture_player = Texture::new().unwrap();
-    let current_player_sprite_rect = IntRect::new(0, 0, sprite_conf.size, sprite_conf.size);
+    let current_player_sprite_rect = IntRect::new(0, 0, configuration.sprite.size, configuration.sprite.size);
     texture_player
         .load_from_file(
             "resources/spriteHero1.png",
-            IntRect::new(0, 0, sprite_conf.size * sprite_conf.nb_frames, sprite_conf.size),
+            IntRect::new(0, 0, configuration.sprite.size * configuration.sprite.nb_frames, configuration.sprite.size),
         )
         .unwrap();
     texture_player.set_smooth(true);
     let mut player_sprite = Sprite::new();
     player_sprite.set_texture(&texture_player, true);
     player_sprite.set_texture_rect(current_player_sprite_rect);
-    player_sprite.set_scale(Vector2f::new(sprite_conf.scale, sprite_conf.scale));
-    player_sprite.set_origin(Vector2f::new(sprite_conf.x_center, sprite_conf.y_center));
+    player_sprite.set_scale(Vector2f::new(configuration.sprite.scale, configuration.sprite.scale));
+    player_sprite.set_origin(Vector2f::new(configuration.sprite.x_center, configuration.sprite.y_center));
     
     let player = player::Player {
         position : Vector2f::new(120.,150.),
@@ -95,25 +83,25 @@ fn main() {
         input_state : InputState::new(),
         actions : VecDeque::new(),
         clock : Clock::start(),
-        running_action : player::RunAction::Standing,
-        running_direction : player::Direction::Right,
+        running_action : game_events::RunAction::Standing,
+        running_direction : game_common::Direction::Right,
         ko : true,
     };
     
     let context_settings = ContextSettings {
-        antialiasing_level: screen_conf.aa_level,
+        antialiasing_level: configuration.screen.aa_level,
         ..Default::default()
     };
     let mut window = RenderWindow::new(
-        (screen_conf.width, screen_conf.height),
+        (configuration.screen.width, configuration.screen.height),
         "Maurice 2D",
         Style::CLOSE,
         &context_settings,
     );
     //window.set_framerate_limit(60);
     window.set_vertical_sync_enabled(true);
-    let mut view = View::new(screen_conf.view_center, screen_conf.view_size);
-    view.set_viewport(FloatRect::new(0., 0., screen_conf.ratio, screen_conf.ratio));
+    let mut view = View::new(configuration.screen.view_center, configuration.screen.view_size);
+    view.set_viewport(FloatRect::new(0., 0., configuration.screen.ratio, configuration.screen.ratio));
     window.set_view(&view);
 
     let timer = Clock::start();
@@ -123,6 +111,7 @@ fn main() {
         arena,
         player,
         timer,
+        display : engine::DisplayState::Game
     };
     loop {
         while let Some(event) = engine.window.poll_event() {

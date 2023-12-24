@@ -1,4 +1,7 @@
 use std::collections::VecDeque;
+use crate::game_events::{FighterEvent,ActionTempo,RunAction};
+use crate::game_common::Direction;
+use crate::game_inputs::InputState;
 use sfml::SfBox;
 use sfml::{
     graphics::{
@@ -8,49 +11,7 @@ use sfml::{
     system::{Clock, Vector2f}
 };
 
-#[derive(Copy, Clone, Debug)]
-pub enum Action {
-    Standing,
-    WalkingRight,
-    WalkingLeft,
-    EndWalkingRight,
-    EndWalkingLeft,
-    Crouch,
-    EndCrouch,
-    Attack1,
-    Attack2,
-    EndAttack,
-}
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum RunAction {
-    Standing,
-    Walking,
-    Crouch,
-    CrouchPunch,
-    Punch,
-    MiddleKick,
-    HighKick,
-}
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum Direction {
-    Left,
-    Right,
-}
-#[derive(Copy, Clone, Debug)]
-pub enum ActionTempo {
-    Infinite,
-    Continu,
-    Immediate,
-}
-#[derive(Copy, Clone, Debug)]
-pub enum Attack {
-    NoAttack,
-    Punch,
-    HighKick,
-    MiddleKick,
-}
 
 #[derive(Copy, Clone, Debug)]
 pub struct ActionDesc {
@@ -71,6 +32,10 @@ impl ActionDesc {
         }
     }
 }
+trait CustomFighter {
+    fn get_action_desc(&mut self, action: RunAction) -> ActionDesc;
+}
+
 
 impl std::fmt::Display for ActionDesc {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
@@ -78,26 +43,6 @@ impl std::fmt::Display for ActionDesc {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
-pub struct InputState {
-    pub flag_crouch: bool,
-    pub flag_move: bool,
-    pub direction: Direction,
-    pub flag_attack : bool,
-    pub attack : Attack,
-}
-
-impl InputState {
-    pub fn new() -> Self {
-        Self {
-            flag_crouch: false,
-            flag_move: false,
-            direction: Direction::Right,
-            flag_attack : false,
-            attack : Attack::NoAttack,
-        }
-    }
-}
 
 #[derive(Copy, Clone)]
 pub struct State {
@@ -139,7 +84,7 @@ pub struct Player<'a> {
     pub sprite: Sprite<'a>,
     pub state: State,
     pub input_state: InputState,
-    pub actions: VecDeque<Action>,
+    pub actions: VecDeque<FighterEvent>,
     pub clock: SfBox<Clock>,
     pub running_action: RunAction,
     pub running_direction: Direction,
@@ -166,7 +111,7 @@ impl<'a> Player<'a> {
                 count: 6,
                 sprite_index: 0,
                 sprite_len: 100,
-                delay: 100,
+                delay: 150,
                 speed: 0.3,
                 tempo: ActionTempo::Continu,
             },
@@ -184,16 +129,34 @@ impl<'a> Player<'a> {
                 count: 3,
                 sprite_index: 9,
                 sprite_len: 100,
-                delay: 100,
+                delay: 150,
                 speed: 0.,
                 tempo: ActionTempo::Immediate,
             },
             RunAction::HighKick => ActionDesc {
                 name: RunAction::HighKick,
-                count: 8,
+                count: 9,
                 sprite_index: 24,
                 sprite_len: 100,
-                delay: 50,
+                delay: 100,
+                speed: 0.,
+                tempo: ActionTempo::Immediate,
+            },
+            RunAction::Blocking => ActionDesc {
+                name: RunAction::Blocking,
+                count: 1,
+                sprite_index: 37,
+                sprite_len: 100,
+                delay: 1000,
+                speed: 0.,
+                tempo: ActionTempo::Immediate,
+            },
+            RunAction::CrouchBlocking => ActionDesc {
+                name: RunAction::CrouchBlocking,
+                count: 1,
+                sprite_index: 38,
+                sprite_len: 100,
+                delay: 1000,
                 speed: 0.,
                 tempo: ActionTempo::Immediate,
             },
@@ -209,78 +172,7 @@ impl<'a> Player<'a> {
         }
     }
 
-    fn get_current_attack_from_input(&self, attack: Attack) -> (RunAction, Direction) {
-        match attack {
-            Attack::HighKick => (RunAction::HighKick, self.input_state.direction),
-            Attack::MiddleKick => (RunAction::MiddleKick, self.input_state.direction),
-            _ => (RunAction::Standing, self.input_state.direction)
-        }
-    }
-
-    fn get_current_action_from_input(&mut self, action: Action) -> (RunAction, Direction) {
-        println!("INPUT - get_current_action_from_input {:?}", action);
-        match action {
-            Action::Crouch => {
-                println!("KEY POP - CROUCH");
-                self.input_state.flag_crouch = true;
-            }
-            Action::EndCrouch => {
-                println!("KEY POP - CROUCH rel");
-                self.input_state.flag_crouch = false;
-            }
-            Action::WalkingLeft => {
-                println!("KEY POP - LEFT");
-                self.input_state.flag_move = true;
-                self.input_state.direction = Direction::Left;
-            },
-            Action::EndWalkingLeft => {
-                println!("KEY POP - LEFT rel");
-                self.input_state.flag_move = false;
-            },
-            Action::WalkingRight => {
-                println!("KEY POP - RIGHT");
-                self.input_state.flag_move = true;
-                self.input_state.direction = Direction::Right;
-            },
-            Action::EndWalkingRight => {
-                println!("KEY POP - RIGHT rel");
-                self.input_state.flag_move = false;
-            },
-            Action::Attack1 => {
-                println!("KEY POP - ATTACK1");
-                self.input_state.flag_attack = true;
-                self.input_state.attack = Attack::MiddleKick;
-            },
-            Action::Attack2 => {
-                println!("KEY POP - ATTACK1");
-                self.input_state.flag_attack = true;
-                self.input_state.attack = Attack::HighKick;
-            },
-            Action::EndAttack => {
-                self.input_state.flag_attack = false;
-                self.input_state.attack = Attack::NoAttack;
-            }
-            _ => {}
-        }
-        match self.input_state {
-            InputState {
-                flag_crouch: true, ..
-            } => (RunAction::Crouch, self.input_state.direction),
-            InputState {
-                flag_crouch: false,
-                flag_move: true,
-                flag_attack : false,
-                ..
-            } => (RunAction::Walking, self.input_state.direction),
-            InputState {
-                flag_crouch: false,
-                flag_attack : true,
-                ..
-            } => self.get_current_attack_from_input(self.input_state.attack),
-            _ => (RunAction::Standing, self.input_state.direction),
-        }
-    }
-
+    
     fn update_sprite(&mut self) {
         let current_player_sprite_rect = IntRect::new(
             (self.state.current_action.sprite_index + self.state.step)
@@ -294,7 +186,7 @@ impl<'a> Player<'a> {
 
     fn on_closed_current_action(&mut self) {
         if self.is_attacking() {
-            self.do_something(Action::EndAttack);
+            self.do_something(FighterEvent::EndAttack);
         }
     }
 
@@ -324,7 +216,7 @@ impl<'a> Player<'a> {
         while !all_input_processed {
             let to_perform = match self.actions.pop_front() {
                 Some(action) => {
-                    let action_to_perform = self.get_current_action_from_input(action);
+                    let action_to_perform = self.input_state.get_current_action_from_input(action);
                     println!("action {:?}", action_to_perform);
                     action_to_perform
                 }
@@ -347,7 +239,7 @@ impl<'a> Player<'a> {
                     self.update_sprite_sequence(true);
                 }
                 _ => {
-                    println!("CURRENT Action {:?}", self.running_action);
+                    //println!("CURRENT Action {:?}", self.running_action);
                     self.update_sprite_sequence(false);
                 }
             }
@@ -361,7 +253,7 @@ impl<'a> Player<'a> {
         window.draw(&self.sprite);
     }
 
-    pub fn do_something(&mut self, action: Action) {
+    pub fn do_something(&mut self, action: FighterEvent) {
         self.actions.push_back(action);
     }
 }
