@@ -8,37 +8,83 @@ use
         system::Vector2f,
     };
 
+struct Cursor<'a> {
+    sprite : Sprite<'a>,
+    position : Vector2f,
+    step : f32,
+    min : Vector2f,
+    max : Vector2f,
+}
+
+impl<'a> Cursor<'a> {
+
+    pub fn new(sprite : Sprite<'a>, configuration : &GameConfiguration) -> Self {
+        Cursor {
+            sprite,
+            position : Vector2f::new(75., 48.),
+            step : 30.,
+            min : Vector2f::new(0., 48.),
+            max : Vector2f::new(75., 48. * 3.),
+        }
+    }
+
+    fn draw(&mut self, window : &mut RenderWindow) {
+        self.sprite.set_position(self.position);
+        self.sprite.set_scale(Vector2f::new(0.3, 0.3));
+        window.draw(&self.sprite);
+    }
+
+    fn move_up(&mut self) {
+        let y = self.position.y - self.step;
+        if y  >= self.min.y {
+            self.position.y = y;
+        }
+    }
+
+    fn move_down(&mut self) {
+        let y = self.position.y + self.step;
+        if y <= self.max.y {
+            self.position.y = y;
+        }
+    }
+
+    fn select(&mut self) {
+        
+    }
+}
+
 pub struct Menu<'a> {
     background : Sprite<'a>,
     letters : Sprite<'a>,
-    skull : Sprite<'a>,
+    cursor : Cursor<'a>,
 }
 
 impl<'a> Menu<'a> {
-    pub fn new(sprite_bg : Sprite<'a>, sprite_letters : Sprite<'a>, skull : Sprite<'a>) -> Self { 
+    pub fn new(sprite_bg : Sprite<'a>, sprite_letters : Sprite<'a>, skull : Sprite<'a>, configuration : &GameConfiguration) -> Self { 
         Menu {
             background : sprite_bg,
             letters : sprite_letters,
-            skull
+            cursor : Cursor::new(skull, configuration)
         }
+    }
+
+    pub fn on_up(&mut self) {
+        self.cursor.move_up();
+    }
+
+    pub fn on_down(&mut self) {
+        self.cursor.move_down();
     }
 
     pub fn draw(&mut self, window : &mut RenderWindow, configuration : &GameConfiguration) {
         self.letters.set_scale(Vector2f::new(0.5, 0.5));
         window.draw(&self.background);
-        self.draw_cursor(window, Vector2f::new(75., 48.));
+        self.cursor.draw(window);
         self.print(window, "mode solo", Vector2f::new(100., 50.), configuration, 10.);
         self.print(window, "multijoueur", Vector2f::new(100., 80.), configuration, 10.);
         self.print(window, "parametres", Vector2f::new(100., 110.), configuration, 10.);
         self.print(window, "quitter", Vector2f::new(100., 140.), configuration, 10.);
     }
-
-    fn draw_cursor(&mut self, window : &mut RenderWindow, position : Vector2f) {
-        self.skull.set_position(position);
-        self.skull.set_scale(Vector2f::new(0.3, 0.3));
-        window.draw(&self.skull);
-    }
-
 
     fn get_sprite_letter_index_from_char(&self, c : char) -> Option<i32> {
         match c {

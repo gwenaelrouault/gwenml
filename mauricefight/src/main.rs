@@ -20,6 +20,7 @@ mod game_configuration;
 mod game_events;
 mod game_common;
 mod game_inputs;
+mod animated_sprite;
 
 fn main() {    
     let configuration = GameConfiguration::new();
@@ -49,7 +50,7 @@ fn main() {
     let mut menu_sprite = Sprite::new();
     menu_sprite.set_texture_rect(IntRect::new(0,0, configuration.screen.width.try_into().unwrap(), configuration.screen.height.try_into().unwrap()));
     menu_sprite.set_texture(&texture_menu, false);
-    let menu = Menu::new(menu_sprite, letters_sprite, skull_sprite);
+    let menu = Menu::new(menu_sprite, letters_sprite, skull_sprite, &configuration);
 
     let background_arena = Image::from_file("resources/ARENA1.png").unwrap();
     let x_arena = background_arena.size().x;
