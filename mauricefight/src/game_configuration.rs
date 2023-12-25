@@ -1,4 +1,10 @@
-use sfml::system::Vector2f;
+use sfml::{
+    graphics::{
+        CircleShape, Color, FloatRect, Font, Image, IntRect, RectangleShape, RenderTarget,
+        RenderWindow, Shape, Sprite, Text, Texture, Transformable, View,
+    },
+    system::Vector2f,
+};
 
 pub struct ScreenConfiguration {
     pub view_size: Vector2f,
@@ -42,9 +48,32 @@ impl SpriteConfiguration {
     }
 }
 
+pub struct TexturePackConfiguration {
+    pub size : i32,
+    pub nb_frames : i32,
+    pub size_letter : i32,
+    pub nb_frames_letters : i32,
+    pub size_skull : i32,
+    pub nb_frames_skull : i32,
+}
+
+impl TexturePackConfiguration {
+    pub fn new() -> Self {
+        Self {
+            size : 64,
+            nb_frames : 1,
+            size_letter : 32,
+            nb_frames_letters: 26,
+            size_skull : 70,
+            nb_frames_skull : 4,
+        }
+    }
+}
+
 pub struct GameConfiguration {
     pub sprite: SpriteConfiguration,
     pub screen: ScreenConfiguration,
+    pub texture_pack : TexturePackConfiguration,
 }
 
 impl GameConfiguration {
@@ -52,6 +81,7 @@ impl GameConfiguration {
         Self {
             sprite: SpriteConfiguration::new(),
             screen: ScreenConfiguration::new(),
+            texture_pack : TexturePackConfiguration::new(),
         }
     }
 }

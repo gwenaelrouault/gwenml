@@ -1,6 +1,8 @@
 use std::collections::HashMap;
+use crate::game_configuration::GameConfiguration;
 use crate::arena::Arena;
 use crate::player::Player;
+use crate::menu::Menu;
 use crate::game_events::FighterEvent;
 use sfml::SfBox;
 use sfml::{
@@ -21,14 +23,36 @@ pub enum DisplayState {
 
 pub struct MauriceFight2dEngine<'a> {
     pub window: RenderWindow,
-    pub view: SfBox<View>,
-    pub arena: Arena<'a>,
-    pub player: Player<'a>,
-    pub timer : SfBox<Clock>,
-    pub display : DisplayState,
+    view: SfBox<View>,
+    arena: Arena<'a>,
+    player: Player<'a>,
+    timer : SfBox<Clock>,
+    display : DisplayState,
+    menu : Menu<'a>,
+    configuration : GameConfiguration,
 }
 
 impl<'a> MauriceFight2dEngine<'a> {
+    pub fn new(
+        window: RenderWindow, 
+        view: SfBox<View>,
+        arena: Arena<'a>, 
+        player: Player<'a>, 
+        menu : Menu<'a>, 
+        configuration : GameConfiguration) -> Self {
+        let timer = Clock::start();
+        MauriceFight2dEngine {
+            window,
+            view,
+            arena,
+            player,
+            timer,
+            display : DisplayState::Menu,
+            menu,
+            configuration,
+        }
+    }
+
     fn draw_update_frame_arena(&mut self) {
         self.arena.draw(&mut self.window);
     }
@@ -46,10 +70,9 @@ impl<'a> MauriceFight2dEngine<'a> {
                 self.window.set_view(&self.view);
             },
             DisplayState::Menu => {
-                
+                self.menu.draw(&mut self.window, &self.configuration);
             }
         }
-        
     }
 
     pub fn render_frame(&mut self) {

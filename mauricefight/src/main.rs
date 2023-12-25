@@ -1,16 +1,14 @@
-use egui_sfml::SfEgui;
 use game_configuration::GameConfiguration;
+use menu::Menu;
 use std::collections::VecDeque;
 use game_inputs::InputState;
-use sfml::SfBox;
 use 
     sfml::{
-        audio::{Sound, SoundBuffer, SoundSource},
         graphics::{
-            CircleShape, Color, Font, RectangleShape, RenderTarget, RenderWindow, Shape, Text,Texture,Sprite,IntRect,View,FloatRect,Image,
+            RenderTarget, RenderWindow, Texture,Sprite,IntRect,View,FloatRect,Image,
             Transformable,
         },
-        system::{Clock, Time, Vector2f},
+        system::{Clock, Vector2f},
         window::{ContextSettings, Event,  Key, Style}
 };
 
@@ -25,21 +23,33 @@ mod game_inputs;
 
 fn main() {    
     let configuration = GameConfiguration::new();
+    let texture_letters = game_common::load_texture(
+        "resources/spriteLetters.png", 
+        configuration.texture_pack.size_letter, 
+        configuration.texture_pack.nb_frames_letters, true, false).unwrap();
+    let mut letters_sprite = Sprite::new();
+    letters_sprite.set_texture(&texture_letters, true);
+    letters_sprite.set_texture_rect(IntRect::new(0, 0, configuration.texture_pack.size_letter, configuration.texture_pack.size_letter));
+
+    let texture_skull = game_common::load_texture(
+        "resources/spriteSkull.png", 
+        configuration.texture_pack.size_skull, 
+        configuration.texture_pack.nb_frames_skull, true, false).unwrap();
+    let mut skull_sprite = Sprite::new();
+    skull_sprite.set_texture(&texture_skull, true);
+    skull_sprite.set_texture_rect(IntRect::new(0, 0, configuration.texture_pack.size_skull, configuration.texture_pack.size_skull));
+    skull_sprite.set_scale(Vector2f::new(0.4, 0.4));
 
     let background_menu = Image::from_file("resources/textures.png").unwrap();
     let mut texture_menu = Texture::new().unwrap();
-   /* texture_menu
-        .load_from_image(
-            &background_menu,
-            IntRect::new(
-                0,
-                0,
-                menu_conf.nbTiles * menu_conf.size,
-                menu_conf.size,
-            ),
-        )
-        .unwrap();
-    texture_menu.set_smooth(true); */
+    let menu_rect = IntRect::new(0,0, configuration.texture_pack.size,configuration.texture_pack.size);
+    texture_menu.load_from_image(&background_menu, menu_rect).unwrap();
+    texture_menu.set_smooth(true);
+    texture_menu.set_repeated(true);
+    let mut menu_sprite = Sprite::new();
+    menu_sprite.set_texture_rect(IntRect::new(0,0, configuration.screen.width.try_into().unwrap(), configuration.screen.height.try_into().unwrap()));
+    menu_sprite.set_texture(&texture_menu, false);
+    let menu = Menu::new(menu_sprite, letters_sprite, skull_sprite);
 
     let background_arena = Image::from_file("resources/ARENA1.png").unwrap();
     let x_arena = background_arena.size().x;
@@ -60,6 +70,7 @@ fn main() {
     let mut arena_sprite = Sprite::new();
     arena_sprite.set_texture(&texture, true);
     let arena = arena::Arena::new(arena_sprite);
+    
     let mut texture_player = Texture::new().unwrap();
     let current_player_sprite_rect = IntRect::new(0, 0, configuration.sprite.size, configuration.sprite.size);
     texture_player
@@ -98,21 +109,14 @@ fn main() {
         Style::CLOSE,
         &context_settings,
     );
-    //window.set_framerate_limit(60);
+    window.set_framerate_limit(60);
     window.set_vertical_sync_enabled(true);
     let mut view = View::new(configuration.screen.view_center, configuration.screen.view_size);
     view.set_viewport(FloatRect::new(0., 0., configuration.screen.ratio, configuration.screen.ratio));
     window.set_view(&view);
 
-    let timer = Clock::start();
-    let mut engine = engine::MauriceFight2dEngine {
-        window,
-        view,
-        arena,
-        player,
-        timer,
-        display : engine::DisplayState::Game
-    };
+    let mut engine = engine::MauriceFight2dEngine::new(window, view, arena, player, menu, configuration);
+
     loop {
         while let Some(event) = engine.window.poll_event() {
             match event {
