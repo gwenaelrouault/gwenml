@@ -13,7 +13,7 @@ use
 };
 
 mod arena;
-mod player;
+mod fighter;
 mod engine;
 mod menu;
 mod game_configuration;
@@ -89,11 +89,11 @@ fn main() {
     player_sprite.set_scale(Vector2f::new(configuration.sprite.scale, configuration.sprite.scale));
     player_sprite.set_origin(Vector2f::new(configuration.sprite.x_center, configuration.sprite.y_center));
     
-    let player = player::Player {
+    let player = fighter::Fighter {
         position : Vector2f::new(120.,150.),
         speed : Vector2f::new(0.,0.),
         sprite : player_sprite,
-        state : player::State::default(),
+        state : fighter::State::default(),
         input_state : InputState::new(),
         actions : VecDeque::new(),
         clock : Clock::start(),

@@ -7,8 +7,6 @@ edition = "2021"
 
 [dependencies]
 sfml = "0.20.0"
-egui-sfml = "0.4.0"
 rand = "0.8.5"
-glu-sys = "0.1.4"
 serde = "1.0.193"
 queues = "1.0.2"

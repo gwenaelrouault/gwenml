@@ -3,7 +3,7 @@ use crate::game_configuration::GameConfiguration;
 use crate::game_events::FighterEvent;
 use crate::game_inputs::InputProcessor;
 use crate::menu::Menu;
-use crate::player::Player;
+use crate::fighter::Fighter;
 use sfml::SfBox;
 use sfml::{
     graphics::{Color, RenderTarget, RenderWindow, View},
@@ -21,7 +21,7 @@ pub struct MauriceFight2dEngine<'a> {
     pub window: RenderWindow,
     view: SfBox<View>,
     arena: Arena<'a>,
-    player: Player<'a>,
+    fighter: Fighter<'a>,
     timer: SfBox<Clock>,
     display: DisplayState,
     menu: Menu<'a>,
@@ -33,7 +33,7 @@ impl<'a> MauriceFight2dEngine<'a> {
         window: RenderWindow,
         view: SfBox<View>,
         arena: Arena<'a>,
-        player: Player<'a>,
+        fighter: Fighter<'a>,
         menu: Menu<'a>,
         configuration: GameConfiguration,
     ) -> Self {
@@ -42,7 +42,7 @@ impl<'a> MauriceFight2dEngine<'a> {
             window,
             view,
             arena,
-            player,
+            fighter,
             timer,
             display: DisplayState::Menu,
             menu,
@@ -54,16 +54,16 @@ impl<'a> MauriceFight2dEngine<'a> {
         self.arena.draw(&mut self.window);
     }
 
-    fn draw_update_frame_player(&mut self) {
-        self.player.draw(&mut self.window);
+    fn draw_update_frame_fighter(&mut self) {
+        self.fighter.draw(&mut self.window);
     }
 
     fn draw_update_frame(&mut self) {
         match self.display {
             DisplayState::Game => {
                 self.draw_update_frame_arena();
-                self.view.move_(self.player.speed);
-                self.draw_update_frame_player();
+                self.view.move_(self.fighter.speed);
+                self.draw_update_frame_fighter();
                 self.window.set_view(&self.view);
             }
             DisplayState::Menu => {
@@ -81,7 +81,7 @@ impl<'a> MauriceFight2dEngine<'a> {
     pub fn process_input_event(&mut self, e: Event) {
         match self.display {
             DisplayState::Game => {
-                self.player.process_event(e);
+                self.fighter.process_event(e);
             },
             DisplayState::Menu => {
                 self.menu.process_event(e);

@@ -78,7 +78,7 @@ impl State {
     }
 }
 
-pub struct Player<'a> {
+pub struct Fighter<'a> {
     pub position: Vector2f,
     pub speed: Vector2f,
     pub sprite: Sprite<'a>,
@@ -91,7 +91,7 @@ pub struct Player<'a> {
     pub ko : bool,
 }
 
-impl<'a> Player<'a> {
+impl<'a> Fighter<'a> {
     fn update_position(&mut self) {
         self.position.x = self.position.x + self.speed.x;
         self.position.y = self.position.y + self.speed.y;
@@ -174,14 +174,14 @@ impl<'a> Player<'a> {
 
     
     fn update_sprite(&mut self) {
-        let current_player_sprite_rect = IntRect::new(
+        let current_fighter_sprite_rect = IntRect::new(
             (self.state.current_action.sprite_index + self.state.step)
                 * self.state.current_action.sprite_len,
             0,
             self.state.current_action.sprite_len,
             self.state.current_action.sprite_len,
         );
-        self.sprite.set_texture_rect(current_player_sprite_rect);
+        self.sprite.set_texture_rect(current_fighter_sprite_rect);
     }
 
     fn on_closed_current_action(&mut self) {
@@ -258,7 +258,7 @@ impl<'a> Player<'a> {
     }
 }
 
-impl<'a> InputProcessor for Player<'a> {
+impl<'a> InputProcessor for Fighter<'a> {
     fn process_event(&mut self, e: Event) {
         match e {
             Event::KeyPressed {
