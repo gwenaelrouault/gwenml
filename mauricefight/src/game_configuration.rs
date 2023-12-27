@@ -65,7 +65,7 @@ impl TexturePackConfiguration {
             size_letter : 32,
             nb_frames_letters: 26,
             size_skull : 70,
-            nb_frames_skull : 4,
+            nb_frames_skull : 6,
         }
     }
 }

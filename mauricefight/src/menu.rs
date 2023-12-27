@@ -1,4 +1,8 @@
-use crate::game_configuration::GameConfiguration;
+use crate::game_common::Direction;
+use crate::game_inputs::InputProcessor;
+use crate::{game_configuration::GameConfiguration, animated_sprite::AnimatedSprite};
+use crate::animated_sprite::AnimationMode;
+use sfml::window::{Event, Key};
 use 
    sfml::{
         graphics::{
@@ -9,8 +13,7 @@ use
     };
 
 struct Cursor<'a> {
-    sprite : Sprite<'a>,
-    position : Vector2f,
+    sprite : AnimatedSprite<'a>,
     step : f32,
     min : Vector2f,
     max : Vector2f,
@@ -20,8 +23,17 @@ impl<'a> Cursor<'a> {
 
     pub fn new(sprite : Sprite<'a>, configuration : &GameConfiguration) -> Self {
         Cursor {
-            sprite,
-            position : Vector2f::new(75., 48.),
+            sprite : AnimatedSprite::new(
+                sprite, 
+                70, 
+                Vector2f::new(0.3, 0.3), 
+                Vector2f::new(80., 55.), 
+                Vector2f::new(0., 0.), 
+                Direction::Right, 
+                0, 
+                200, 
+                6, 
+                AnimationMode::Repeated),
             step : 30.,
             min : Vector2f::new(0., 48.),
             max : Vector2f::new(75., 48. * 3.),
@@ -29,27 +41,25 @@ impl<'a> Cursor<'a> {
     }
 
     fn draw(&mut self, window : &mut RenderWindow) {
-        self.sprite.set_position(self.position);
-        self.sprite.set_scale(Vector2f::new(0.3, 0.3));
-        window.draw(&self.sprite);
+        self.sprite.next_frame(window);
     }
 
     fn move_up(&mut self) {
-        let y = self.position.y - self.step;
+        let y = self.sprite.position.y - self.step;
         if y  >= self.min.y {
-            self.position.y = y;
+            self.sprite.position.y = y;
         }
     }
 
     fn move_down(&mut self) {
-        let y = self.position.y + self.step;
+        let y = self.sprite.position.y + self.step;
         if y <= self.max.y {
-            self.position.y = y;
+            self.sprite.position.y = y;
         }
     }
 
     fn select(&mut self) {
-        
+
     }
 }
 
@@ -144,6 +154,26 @@ impl<'a> Menu<'a> {
                 }
             }
             position.x = position.x + tab;
+        }
+    }
+}
+
+impl<'a> InputProcessor for Menu<'a> {
+    fn process_event(&mut self, e: Event) {
+        match e {
+            Event::KeyPressed {
+                code: Key::Down, ..
+            } => {
+                println!("KEY PUSH:DOWN");
+                self.on_down();
+            }
+            Event::KeyPressed {
+                code: Key::Up, ..
+            } => {
+                println!("KEY PUSH:DOWN");
+                self.on_up();
+            }
+            _ => {}
         }
     }
 }

@@ -31,6 +31,7 @@ fn main() {
     let mut letters_sprite = Sprite::new();
     letters_sprite.set_texture(&texture_letters, true);
     letters_sprite.set_texture_rect(IntRect::new(0, 0, configuration.texture_pack.size_letter, configuration.texture_pack.size_letter));
+    letters_sprite.set_origin(Vector2f::new(16.,16.));
 
     let texture_skull = game_common::load_texture(
         "resources/spriteSkull.png", 
@@ -40,6 +41,7 @@ fn main() {
     skull_sprite.set_texture(&texture_skull, true);
     skull_sprite.set_texture_rect(IntRect::new(0, 0, configuration.texture_pack.size_skull, configuration.texture_pack.size_skull));
     skull_sprite.set_scale(Vector2f::new(0.4, 0.4));
+    skull_sprite.set_origin(Vector2f::new(35., 35.));
 
     let background_menu = Image::from_file("resources/textures.png").unwrap();
     let mut texture_menu = Texture::new().unwrap();

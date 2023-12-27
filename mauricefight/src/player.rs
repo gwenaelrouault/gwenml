@@ -1,7 +1,9 @@
 use std::collections::VecDeque;
 use crate::game_events::{FighterEvent,ActionTempo,RunAction};
 use crate::game_common::Direction;
-use crate::game_inputs::InputState;
+use crate::game_inputs::{InputState, InputProcessor};
+use crate::animated_sprite;
+use sfml::window::{Event, Key};
 use sfml::SfBox;
 use sfml::{
     graphics::{
@@ -10,8 +12,6 @@ use sfml::{
     },
     system::{Clock, Vector2f}
 };
-
-
 
 #[derive(Copy, Clone, Debug)]
 pub struct ActionDesc {
@@ -190,7 +190,7 @@ impl<'a> Player<'a> {
         }
     }
 
-    fn update_sprite_sequence(&mut self, new_sequence : bool) -> bool{
+    fn update_sprite_sequence(&mut self, new_sequence : bool) -> bool {
         let mut is_closed_current_action = false;
         if !new_sequence {        
             if self.clock.elapsed_time().as_milliseconds() >= self.state.current_action.delay {
@@ -255,5 +255,65 @@ impl<'a> Player<'a> {
 
     pub fn do_something(&mut self, action: FighterEvent) {
         self.actions.push_back(action);
+    }
+}
+
+impl<'a> InputProcessor for Player<'a> {
+    fn process_event(&mut self, e: Event) {
+        match e {
+            Event::KeyPressed {
+                code: Key::Right, ..
+            } => {
+                println!("KEY PUSH:RIGHT");
+                self.do_something(FighterEvent::WalkingRight);
+            }
+            Event::KeyReleased {
+                code: Key::Right, ..
+            } => {
+                println!("KEY PUSH:RIGHT rel");
+                self.do_something(FighterEvent::EndWalkingRight);
+            }
+            Event::KeyPressed {
+                code: Key::Left, ..
+            } => {
+                println!("KEY PUSH:LEFT");
+                self.do_something(FighterEvent::WalkingLeft);
+            }
+            Event::KeyReleased {
+                code: Key::Left, ..
+            } => {
+                println!("KEY PUSH:LEFT rel");
+                self.do_something(FighterEvent::EndWalkingLeft);
+            }
+            Event::KeyPressed {
+                code: Key::Down, ..
+            } => {
+                println!("KEY PUSH:DOWN");
+                self.do_something(FighterEvent::Crouch);
+            }
+            Event::KeyReleased {
+                code: Key::Down, ..
+            } => {
+                println!("KEY PUSH:DOWN rel");
+                self.do_something(FighterEvent::EndCrouch);
+            }
+            Event::KeyPressed { code: Key::Up, .. } => {
+                println!("KEY:UP");
+                self.do_something(FighterEvent::Standing);
+            }
+            Event::KeyPressed { code: Key::A, .. } => {
+                println!("KEY:MDDLE KICK");
+                self.do_something(FighterEvent::Attack1);
+            }
+            Event::KeyPressed { code: Key::Z, .. } => {
+                println!("KEY:HIGH KICK");
+                self.do_something(FighterEvent::Attack2);
+            }
+            Event::KeyPressed { code: Key::E, .. } => {
+                println!("KEY:BLOCKING");
+                self.do_something(FighterEvent::Blocking);
+            }
+            _ => {}
+        }
     }
 }

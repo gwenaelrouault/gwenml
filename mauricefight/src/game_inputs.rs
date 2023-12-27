@@ -1,5 +1,11 @@
 use crate::game_common::Direction;
 use crate::game_events::{Attack,RunAction,FighterEvent};
+use sfml::window::Event;
+
+
+pub trait InputProcessor {
+    fn process_event(&mut self, e: Event);
+}
 
 #[derive(Copy, Clone, Debug)]
 pub struct InputState {

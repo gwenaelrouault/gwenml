@@ -12,6 +12,12 @@ pub enum Direction {
     Right,
 }
 
+
+    pub fn inverse_direction(direction : Direction) -> Direction {
+        if direction == Direction::Right { Direction::Left } else {Direction::Left}
+    }
+
+
 pub fn load_texture(img : &str, size_frame : i32, nb_frames : i32, smooth : bool, repeated : bool) -> Option<SfBox<Texture>> {
     let mut texture = Texture::new()?;
     texture

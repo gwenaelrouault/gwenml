@@ -1,6 +1,7 @@
 use crate::arena::Arena;
 use crate::game_configuration::GameConfiguration;
 use crate::game_events::FighterEvent;
+use crate::game_inputs::InputProcessor;
 use crate::menu::Menu;
 use crate::player::Player;
 use sfml::SfBox;
@@ -79,75 +80,11 @@ impl<'a> MauriceFight2dEngine<'a> {
 
     pub fn process_input_event(&mut self, e: Event) {
         match self.display {
-            DisplayState::Game => match e {
-                Event::KeyPressed {
-                    code: Key::Right, ..
-                } => {
-                    println!("KEY PUSH:RIGHT");
-                    self.player.do_something(FighterEvent::WalkingRight);
-                }
-                Event::KeyReleased {
-                    code: Key::Right, ..
-                } => {
-                    println!("KEY PUSH:RIGHT rel");
-                    self.player.do_something(FighterEvent::EndWalkingRight);
-                }
-                Event::KeyPressed {
-                    code: Key::Left, ..
-                } => {
-                    println!("KEY PUSH:LEFT");
-                    self.player.do_something(FighterEvent::WalkingLeft);
-                }
-                Event::KeyReleased {
-                    code: Key::Left, ..
-                } => {
-                    println!("KEY PUSH:LEFT rel");
-                    self.player.do_something(FighterEvent::EndWalkingLeft);
-                }
-                Event::KeyPressed {
-                    code: Key::Down, ..
-                } => {
-                    println!("KEY PUSH:DOWN");
-                    self.player.do_something(FighterEvent::Crouch);
-                }
-                Event::KeyReleased {
-                    code: Key::Down, ..
-                } => {
-                    println!("KEY PUSH:DOWN rel");
-                    self.player.do_something(FighterEvent::EndCrouch);
-                }
-                Event::KeyPressed { code: Key::Up, .. } => {
-                    println!("KEY:UP");
-                    self.player.do_something(FighterEvent::Standing);
-                }
-                Event::KeyPressed { code: Key::A, .. } => {
-                    println!("KEY:MDDLE KICK");
-                    self.player.do_something(FighterEvent::Attack1);
-                }
-                Event::KeyPressed { code: Key::Z, .. } => {
-                    println!("KEY:HIGH KICK");
-                    self.player.do_something(FighterEvent::Attack2);
-                }
-                Event::KeyPressed { code: Key::E, .. } => {
-                    println!("KEY:BLOCKING");
-                    self.player.do_something(FighterEvent::Blocking);
-                }
-                _ => {}
+            DisplayState::Game => {
+                self.player.process_event(e);
             },
-            DisplayState::Menu => match e {
-                Event::KeyPressed {
-                    code: Key::Down, ..
-                } => {
-                    println!("KEY PUSH:DOWN");
-                    self.menu.on_down();
-                }
-                Event::KeyPressed {
-                    code: Key::Up, ..
-                } => {
-                    println!("KEY PUSH:DOWN");
-                    self.menu.on_up();
-                }
-                _ => {}
+            DisplayState::Menu => {
+                self.menu.process_event(e);
             }
         }
     }
