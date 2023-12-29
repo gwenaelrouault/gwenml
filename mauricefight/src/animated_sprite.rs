@@ -55,7 +55,7 @@ impl AnimationInfo  {
                 }
             }
             false => {
-                self.start()
+                self.start();
             }
         }
         is_end_animation
@@ -70,14 +70,18 @@ impl AnimationInfo  {
     }
 
     fn next_step(&mut self) -> i32 {
+        
         self.step = self.step + 1;
+        println!("next step {}", self.step);
         self.restart_clock();
         self.step       
     }
 
-    fn start(&mut self) {
+    fn start(&mut self) -> i32{
         self.started = true;
+        self.step = 0;
         self.restart_clock();
+        self.step 
     }
 
     fn is_end_sequence(&self) -> bool {
@@ -88,7 +92,7 @@ impl AnimationInfo  {
         let mut is_end_sequence = true;
         match self.mode {
             AnimationMode::Repeated => {
-                self.step = 0;
+                self.start();
             }
             _ => {
                 is_end_sequence = true;
@@ -171,16 +175,14 @@ impl<'a> AnimatedSprite<'a> {
         window.draw(&self.sprite.sprite);
     }
 
-    pub fn next_frame(&mut self, window: &mut RenderWindow) -> bool {
-        //println!("STEP {} / INDEX : {} / SIZE : {}", self.animation.step, self.sprite.index, self.sprite.size);
+    pub fn next_frame(&mut self, window: &mut RenderWindow) -> (bool,i32) {
+        println!("STEP {} / INDEX : {} / SIZE : {}", self.animation.step, self.sprite.index, self.sprite.size);
         let is_closed_current_action = self.animation.next_frame();
         self.sprite.rect.left = (self.sprite.index + self.animation.step) * self.sprite.size;
-        //println!("RECT LEFT : {}:{}:{}:{}", self.sprite.rect.left, self.sprite.rect.top,
-        //    self.sprite.rect.height, self.sprite.rect.width);
         self.sprite.sprite.set_texture_rect(self.sprite.rect);
         self.update_position();
         window.draw(&self.sprite.sprite);
-        is_closed_current_action
+        (is_closed_current_action, self.animation.step)
     }
 
     fn update_position(&mut self) {

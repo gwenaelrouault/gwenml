@@ -12,15 +12,6 @@ pub enum Direction {
     Left,
     Right,
 }
-
-pub fn inverse_direction(direction: Direction) -> Direction {
-    if direction == Direction::Right {
-        Direction::Left
-    } else {
-        Direction::Left
-    }
-}
-
 pub fn load_texture(
     img: &str,
     size_frame: i32,
@@ -37,7 +28,6 @@ pub fn load_texture(
 }
 
 pub fn load_sprite(sprite : &mut Sprite, size : i32) {
-    //
     sprite.set_texture_rect(IntRect::new(0, 0, size, size));
     sprite.set_origin(Vector2f::new(size as f32 / 2.,size as f32 / 2.));
 }

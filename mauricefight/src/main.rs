@@ -157,7 +157,7 @@ fn main() {
     fighters.push(maurice_fighter);
     let mut engine = engine::MauriceFight2dEngine::new(window, view, arena, fighters, "maurice", menu, configuration);
 
-    // GAME LOOP
+    // game loop
     loop {
         while let Some(event) = engine.window.poll_event() {
             if engine.process_input_event(event) {

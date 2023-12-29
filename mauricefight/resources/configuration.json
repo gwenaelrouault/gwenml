@@ -31,46 +31,371 @@
                 {
                     "name" : "idle",
                     "sequence" : {
-                        "index" : 5,
+                        "index" : 8,
                         "nb_frames" : 4,
                         "delay" : 200,
-                        "speed" : 0
+                        "speed" : 0,
+                        "frames" : [
+                            {
+                                "count" : 0,
+                                "body" : {
+                                    "top"  : -15.0,
+                                    "left" : -10.0,
+                                    "width" : 15.0,
+                                    "height" : 20.0
+                                },
+                                "head" : {
+                                    "top"  : -22.0,
+                                    "left" : -5.0,
+                                    "width" : 10.0,
+                                    "height" : 10.0
+                                },
+                                "legs" : {
+                                    "top"  : 5.0,
+                                    "left" : -15.0,
+                                    "width" : 25.0,
+                                    "height" : 25.0
+                                }
+                            },
+                            {
+                                "count" : 1,
+                                "body" : {
+                                    "top"  : -15.0,
+                                    "left" : -10.0,
+                                    "width" : 15.0,
+                                    "height" : 20.0
+                                },
+                                "head" : {
+                                    "top"  : -22.0,
+                                    "left" : -5.0,
+                                    "width" : 10.0,
+                                    "height" : 10.0
+                                },
+                                "legs" : {
+                                    "top"  : 5.0,
+                                    "left" : -15.0,
+                                    "width" : 25.0,
+                                    "height" : 25.0
+                                }
+                            },
+                            {
+                                "count" : 2,
+                                "body" : {
+                                    "top"  : -15.0,
+                                    "left" : -10.0,
+                                    "width" : 15.0,
+                                    "height" : 20.0
+                                },
+                                "head" : {
+                                    "top"  : -22.0,
+                                    "left" : -5.0,
+                                    "width" : 10.0,
+                                    "height" : 10.0
+                                },
+                                "legs" : {
+                                    "top"  : 5.0,
+                                    "left" : -15.0,
+                                    "width" : 25.0,
+                                    "height" : 25.0
+                                }
+                            },
+                            {
+                                "count" : 3,
+                                "body" : {
+                                    "top"  : -15.0,
+                                    "left" : -10.0,
+                                    "width" : 15.0,
+                                    "height" : 20.0
+                                },
+                                "head" : {
+                                    "top"  : -22.0,
+                                    "left" : -5.0,
+                                    "width" : 10.0,
+                                    "height" : 10.0
+                                },
+                                "legs" : {
+                                    "top"  : 5.0,
+                                    "left" : -15.0,
+                                    "width" : 25.0,
+                                    "height" : 25.0
+                                }
+                            }
+                        ]
                     }
                 },
                 {
                     "name" : "walking",
                     "sequence" : {
                         "index" : 0,
-                        "nb_frames" : 6,
+                        "nb_frames" : 8,
                         "delay" : 150,
-                        "speed" : 0.3
+                        "speed" : 0.3,
+                        "frames" : [
+                            {
+                                "count" : 0,
+                                "body" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "head" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "legs" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                }
+                            },
+                            {
+                                "count" : 1,
+                                "body" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "head" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "legs" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                }
+                            },
+                            {
+                                "count" : 2,
+                                "body" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "head" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "legs" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                }
+                            },
+                            {
+                                "count" : 3,
+                                "body" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "head" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "legs" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                }
+                            },
+                            {
+                                "count" : 4,
+                                "body" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "head" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "legs" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                }
+                            },
+                            {
+                                "count" : 5,
+                                "body" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "head" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "legs" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                }
+                            },
+                            {
+                                "count" : 6,
+                                "body" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "head" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "legs" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                }
+                            },
+                            {
+                                "count" : 7,
+                                "body" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "head" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "legs" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                }
+                            }
+                        ]
                     }
                 },
                 {
                     "name" : "crouch",
                     "sequence" : {
-                        "index" : 20,
+                        "index" : 23,
                         "nb_frames" : 1,
                         "delay" : 150,
-                        "speed" : 0
+                        "speed" : 0,
+                        "frames" : [
+                            {
+                                "count" : 0,
+                                "body" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "head" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "legs" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                }
+                            }
+                        ]
                     }
                 },
                 {
                     "name" : "blocking",
                     "sequence" : {
-                        "index" : 37,
+                        "index" : 40,
                         "nb_frames" : 1,
                         "delay" : 150,
-                        "speed" : 0
+                        "speed" : 0,
+                        "frames" : [
+                            {
+                                "count" : 0,
+                                "body" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "head" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "legs" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                }
+                            }
+                        ]
                     }
                 },
                 {
                     "name" : "middle_kick",
                     "sequence" : {
-                        "index" : 9,
+                        "index" : 12,
                         "nb_frames" : 3,
                         "delay" : 150,
-                        "speed" : 0
+                        "speed" : 0,
+                        "frames" : [
+                            {
+                                "count" : 0,
+                                "body" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "head" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                },
+                                "legs" : {
+                                    "top"  : 0.0,
+                                    "left" : 0.0,
+                                    "width" : 0.0,
+                                    "height" : 0.0
+                                }
+                            }
+                        ]
                     }
                 }
             ]

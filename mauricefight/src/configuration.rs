@@ -1,11 +1,28 @@
 use serde_derive::Deserialize;
 
 #[derive(Deserialize,Debug,Clone)]
+pub struct HitBoxConfiguration {
+    pub top : f32,
+    pub left : f32,
+    pub height : f32,
+    pub width : f32,
+}
+
+#[derive(Deserialize,Debug,Clone)]
+pub struct FrameConfiguration {
+    pub count : i32,
+    pub body : HitBoxConfiguration,
+    pub head : HitBoxConfiguration,
+    pub legs : HitBoxConfiguration,
+}
+
+#[derive(Deserialize,Debug,Clone)]
 pub struct SpriteSequenceConfiguration {
     pub index : i32,
     pub nb_frames : i32,
     pub delay : i32,
     pub speed : f32,
+    pub frames :  Vec<FrameConfiguration>,
 }
 
 #[derive(Deserialize,Debug,Clone)]
@@ -68,6 +85,7 @@ pub struct CharacterConfiguration {
 
 impl CharacterConfiguration {
     pub fn get_action_configuration(&self, name : &str) -> Option<&ActionConfiguration> {
+        println!("search {}", name);
         self.actions.iter().find(|x| x.name.eq_ignore_ascii_case(name))
     }
 }

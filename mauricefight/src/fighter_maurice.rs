@@ -12,10 +12,10 @@ use std::fmt;
 
 #[derive(Copy, Clone, Debug)]
 pub struct InputState {
-    pub flag_crouch: bool,
-    pub flag_move: bool,
-    pub direction: Direction,
-    pub flag_attack: bool,
+    flag_crouch: bool,
+    flag_move: bool,
+    direction: Direction,
+    flag_attack: bool,
 }
 
 impl InputState {
@@ -34,6 +34,8 @@ enum MauriceRun {
     Idle,
     Walking,
     Crouch,
+    MiddleKick,
+    Punch,
 }
 
 impl fmt::Display for MauriceRun {
@@ -41,6 +43,8 @@ impl fmt::Display for MauriceRun {
         match self {
             MauriceRun::Walking => write!(f, "walking"),
             MauriceRun::Crouch => write!(f, "crouch"),
+            MauriceRun::MiddleKick=> write!(f, "middle_kick"),
+            MauriceRun::Punch=> write!(f, "punch"),
             _ => write!(f, "idle"),
         }
     }
@@ -110,6 +114,12 @@ impl<'a> Maurice<'a> {
             Event::KeyPressed {
                 code: Key::Escape, ..
             } => MauriceInput::Exit,
+            Event::KeyPressed {
+                code: Key::A, ..
+            } => MauriceInput::Punch,
+            Event::KeyPressed {
+                code: Key::B, ..
+            } => MauriceInput::MiddleKick,
             _ => MauriceInput::Idle,
         }
     }
@@ -176,6 +186,7 @@ impl<'a> Maurice<'a> {
         match to_perform {
             // new action to perform
             (_r, _d) if self.current_action != _r || self.current_direction != _d => {
+                println!("---------------NEW ACTION {}->{}", self.current_action,_r);
                 self.current_direction = _d;
                 self.current_action = _r;
                 let mode = if self.current_action == MauriceRun::Idle || self.current_action == MauriceRun::Walking {AnimationMode::Repeated} else  {AnimationMode::OneShot};

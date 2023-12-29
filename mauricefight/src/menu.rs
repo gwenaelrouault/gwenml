@@ -1,4 +1,3 @@
-use crate::configuration;
 use crate::common::Direction;
 use crate::inputs::InputProcessor;
 use crate::inputs::ResultEvent;
