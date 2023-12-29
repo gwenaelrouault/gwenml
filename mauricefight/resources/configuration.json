@@ -1,0 +1,119 @@
+{
+    "levels" : [
+        {
+            "name" : "arena1",
+            "sprite" : {
+                "img" : "resources/ARENA1.png",
+                "nb_frames" : 40,
+                "size" : 70,
+                "display" : {
+                    "scale" : 0.7,
+                    "x_origin" : 0,
+                    "y_origin" : 0
+                }
+            }
+        }
+    ],
+    "characters" : [
+        {
+            "name" : "Maurice",
+            "sprite" : {
+                "img" : "resources/sprite_maurice.png",
+                "nb_frames" : 40,
+                "size" : 100,
+                "display" : {
+                    "scale" : 0.7,
+                    "x_origin" : 50,
+                    "y_origin" : 50
+                }
+            },
+            "actions" : [
+                {
+                    "name" : "idle",
+                    "sequence" : {
+                        "index" : 5,
+                        "nb_frames" : 4,
+                        "delay" : 200,
+                        "speed" : 0
+                    }
+                },
+                {
+                    "name" : "walking",
+                    "sequence" : {
+                        "index" : 0,
+                        "nb_frames" : 6,
+                        "delay" : 150,
+                        "speed" : 0.3
+                    }
+                },
+                {
+                    "name" : "crouch",
+                    "sequence" : {
+                        "index" : 20,
+                        "nb_frames" : 1,
+                        "delay" : 150,
+                        "speed" : 0
+                    }
+                },
+                {
+                    "name" : "blocking",
+                    "sequence" : {
+                        "index" : 37,
+                        "nb_frames" : 1,
+                        "delay" : 150,
+                        "speed" : 0
+                    }
+                },
+                {
+                    "name" : "middle_kick",
+                    "sequence" : {
+                        "index" : 9,
+                        "nb_frames" : 3,
+                        "delay" : 150,
+                        "speed" : 0
+                    }
+                }
+            ]
+        }
+    ],
+    "gui" : {
+        "cursor" : {
+            "delay" : 150,
+            "sprite" : {
+                "img" : "resources/sprite_skull.png",
+                "nb_frames" : 6,
+                "size" : 70,
+                "display" : {
+                    "scale" : 0.3,
+                    "x_origin" : 35,
+                    "y_origin" : 35
+                }
+            }
+            
+        },
+        "fonts" : {
+            "sprite" : {
+                "img" : "resources/sprite_fonts.png",
+                "nb_frames" : 26,
+                "size" : 32,
+                "display" : {
+                    "scale" : 0.3,
+                    "x_origin" : 16,
+                    "y_origin" : 16
+                }
+            }
+        }
+    },
+    "textures" : {
+        "sprite" : {
+            "img" : "resources/sprite_textures.png",
+            "nb_frames" : 1,
+            "size" : 64,
+            "display" : {
+                "scale" : 1,
+                "x_origin" : 32,
+                "y_origin" : 32
+            }
+        }
+    }
+}

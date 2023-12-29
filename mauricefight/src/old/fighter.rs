@@ -1,17 +1,15 @@
-use std::collections::VecDeque;
-use crate::game_events::{FighterEvent,ActionTempo,RunAction};
+use crate::animated_sprite::{AnimatedSprite, AnimationMode};
 use crate::game_common::Direction;
-use crate::game_inputs::{InputState, InputProcessor};
-use crate::animated_sprite;
+use crate::configuration::CharacterConfiguration;
+use crate::game_events::{ActionTempo, FighterEvent, RunAction};
+use crate::game_inputs::{InputProcessor, InputState};
 use sfml::window::{Event, Key};
 use sfml::SfBox;
 use sfml::{
-    graphics::{
-        IntRect, RenderTarget,
-        RenderWindow, Sprite, Transformable,
-    },
-    system::{Clock, Vector2f}
+    graphics::{IntRect, RenderTarget, RenderWindow, Sprite, Transformable},
+    system::{Clock, Vector2f},
 };
+use std::collections::VecDeque;
 
 #[derive(Copy, Clone, Debug)]
 pub struct ActionDesc {
@@ -36,13 +34,11 @@ trait CustomFighter {
     fn get_action_desc(&mut self, action: RunAction) -> ActionDesc;
 }
 
-
 impl std::fmt::Display for ActionDesc {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(fmt, "Action : {:?}, speed : {}", self.name, self.speed)
     }
 }
-
 
 #[derive(Copy, Clone)]
 pub struct State {
@@ -79,24 +75,46 @@ impl State {
 }
 
 pub struct Fighter<'a> {
-    pub position: Vector2f,
-    pub speed: Vector2f,
-    pub sprite: Sprite<'a>,
-    pub state: State,
-    pub input_state: InputState,
-    pub actions: VecDeque<FighterEvent>,
-    pub clock: SfBox<Clock>,
-    pub running_action: RunAction,
-    pub running_direction: Direction,
-    pub ko : bool,
+    sprite: AnimatedSprite<'a>,
+    state: State,
+    input_state: InputState,
+    actions: VecDeque<FighterEvent>,
+    running_action: RunAction,
+    ko: bool,
 }
 
 impl<'a> Fighter<'a> {
+    pub fn new(character : &CharacterConfiguration, sprite : Sprite, x: f32, y: f32, default_action : & str) -> Self {        
+        Fighter {
+            sprite: AnimatedSprite::new(
+                sprite,
+                character.sprite.size,
+                character.sprite.display.scale,
+                x,
+                y,
+                0.,
+                0.,
+                Direction::Right,
+                2,
+                AnimationMode::Repeated,
+            ),
+            state: State::new(ActionDesc::default),
+            input_state : InputState::new(),
+            actions : Vec::new(),
+            running_action : RunAction::Blocking,
+            ko : false
+        }
+    }
+
     fn update_position(&mut self) {
         self.position.x = self.position.x + self.speed.x;
         self.position.y = self.position.y + self.speed.y;
         self.sprite.set_position(self.position);
-        let x_scale = if self.running_direction == Direction::Left { -0.7 } else { 0.7 };
+        let x_scale = if self.running_direction == Direction::Left {
+            -0.7
+        } else {
+            0.7
+        };
         self.sprite.set_scale(Vector2f::new(x_scale, 0.7));
     }
 
@@ -172,40 +190,26 @@ impl<'a> Fighter<'a> {
         }
     }
 
-    
-    fn update_sprite(&mut self) {
-        let current_fighter_sprite_rect = IntRect::new(
-            (self.state.current_action.sprite_index + self.state.step)
-                * self.state.current_action.sprite_len,
-            0,
-            self.state.current_action.sprite_len,
-            self.state.current_action.sprite_len,
-        );
-        self.sprite.set_texture_rect(current_fighter_sprite_rect);
-    }
-
     fn on_closed_current_action(&mut self) {
         if self.is_attacking() {
             self.do_something(FighterEvent::EndAttack);
         }
     }
 
-    fn update_sprite_sequence(&mut self, new_sequence : bool) -> bool {
+    fn update_sprite_sequence(&mut self, new_sequence: bool) -> bool {
         let mut is_closed_current_action = false;
-        if !new_sequence {        
+        if !new_sequence {
             if self.clock.elapsed_time().as_milliseconds() >= self.state.current_action.delay {
                 if self.state.is_done() && self.state.current_action.is_repeated() {
                     self.state.step = 0;
-                } 
-                else if !self.state.is_done() {
-                     self.state.step = self.state.step + 1;
-                }
-                else {
+                } else if !self.state.is_done() {
+                    self.state.step = self.state.step + 1;
+                } else {
                     println!("END ACTION {:?}", self.state.current_action);
                     is_closed_current_action = true;
                     self.on_closed_current_action();
                 }
-                self.clock.restart();    
+                self.clock.restart();
             }
         }
         is_closed_current_action
@@ -248,9 +252,7 @@ impl<'a> Fighter<'a> {
 
     pub fn draw(&mut self, window: &mut RenderWindow) {
         self.perform_action();
-        self.update_sprite();
-        self.update_position();
-        window.draw(&self.sprite);
+        self.sprite.next_frame(window);
     }
 
     pub fn do_something(&mut self, action: FighterEvent) {
@@ -259,7 +261,7 @@ impl<'a> Fighter<'a> {
 }
 
 impl<'a> InputProcessor for Fighter<'a> {
-    fn process_event(&mut self, e: Event) {
+    fn process_event(&mut self, e: Event) -> bool {
         match e {
             Event::KeyPressed {
                 code: Key::Right, ..
@@ -315,5 +317,6 @@ impl<'a> InputProcessor for Fighter<'a> {
             }
             _ => {}
         }
+        false
     }
 }

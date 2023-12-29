@@ -1,3 +1,4 @@
+use std::{collections::HashMap, str::FromStr};
 use sfml::{
     graphics::{
         CircleShape, Color, FloatRect, Font, Image, IntRect, RectangleShape, RenderTarget,
@@ -5,6 +6,36 @@ use sfml::{
     },
     system::Vector2f,
 };
+
+pub struct CharacterConfiguration<'a>{
+    pub name : & 'a str,
+    pub sprite_filename : & 'a str,
+    pub nb_frames : i32,
+    pub size : i32,
+}
+
+impl<'a> CharacterConfiguration<'a> {
+    pub fn new(name : &str, sprite_filename : &str, nb_frames : i32, size : i32) -> Self {
+        CharacterConfiguration {
+            name,
+            sprite_filename,
+            nb_frames,
+            size,
+        }
+    }
+}
+
+pub struct CharactersConfiguration<'a> {
+    characters : HashMap<&'a str, CharacterConfiguration::new()<'a>> ,
+}
+
+impl<'a> CharactersConfiguration<'a> {
+    pub fn new() -> Self {
+        CharactersConfiguration {
+            characters : HashMap::from([("toto", CharacterConfiguration::)]),
+        }
+    }
+}
 
 pub struct ScreenConfiguration {
     pub view_size: Vector2f,
@@ -17,7 +48,7 @@ pub struct ScreenConfiguration {
 
 impl ScreenConfiguration {
     pub fn new() -> Self {
-        Self {
+        ScreenConfiguration {
             view_size: Vector2f::new(800., 600.),
             view_center: Vector2f::new(400., 300.),
             ratio: 2.7,
@@ -49,23 +80,23 @@ impl SpriteConfiguration {
 }
 
 pub struct TexturePackConfiguration {
-    pub size : i32,
-    pub nb_frames : i32,
-    pub size_letter : i32,
-    pub nb_frames_letters : i32,
-    pub size_skull : i32,
-    pub nb_frames_skull : i32,
+    pub size: i32,
+    pub nb_frames: i32,
+    pub size_letter: i32,
+    pub nb_frames_letters: i32,
+    pub size_skull: i32,
+    pub nb_frames_skull: i32,
 }
 
 impl TexturePackConfiguration {
     pub fn new() -> Self {
         Self {
-            size : 64,
-            nb_frames : 1,
-            size_letter : 32,
+            size: 64,
+            nb_frames: 1,
+            size_letter: 32,
             nb_frames_letters: 26,
-            size_skull : 70,
-            nb_frames_skull : 6,
+            size_skull: 70,
+            nb_frames_skull: 6,
         }
     }
 }
@@ -73,7 +104,7 @@ impl TexturePackConfiguration {
 pub struct GameConfiguration {
     pub sprite: SpriteConfiguration,
     pub screen: ScreenConfiguration,
-    pub texture_pack : TexturePackConfiguration,
+    pub texture_pack: TexturePackConfiguration,
 }
 
 impl GameConfiguration {
@@ -81,7 +112,7 @@ impl GameConfiguration {
         Self {
             sprite: SpriteConfiguration::new(),
             screen: ScreenConfiguration::new(),
-            texture_pack : TexturePackConfiguration::new(),
+            texture_pack: TexturePackConfiguration::new(),
         }
     }
 }

@@ -1,6 +1,8 @@
-use crate::game_common::Direction;
-use crate::game_inputs::InputProcessor;
-use crate::{game_configuration::GameConfiguration, animated_sprite::AnimatedSprite};
+use crate::configuration;
+use crate::common::Direction;
+use crate::inputs::InputProcessor;
+use crate::inputs::ResultEvent;
+use crate::{configuration::Configuration, animated_sprite::AnimatedSprite};
 use crate::animated_sprite::AnimationMode;
 use sfml::window::{Event, Key};
 use 
@@ -12,28 +14,40 @@ use
         system::Vector2f,
     };
 
+#[derive(Copy, Clone, Debug, PartialEq)]
+enum MenuAction {
+    Nothing,
+    Cancel,
+    Solo,
+    Multi,
+    Params
+}
+
 struct Cursor<'a> {
     sprite : AnimatedSprite<'a>,
+    selected : i32,
     step : f32,
     min : Vector2f,
     max : Vector2f,
 }
 
 impl<'a> Cursor<'a> {
-
-    pub fn new(sprite : Sprite<'a>, configuration : &GameConfiguration) -> Self {
+    pub fn new(sprite : Sprite<'a>, configuration : &Configuration) -> Self {
         Cursor {
             sprite : AnimatedSprite::new(
                 sprite, 
-                70, 
-                Vector2f::new(0.3, 0.3), 
-                Vector2f::new(80., 55.), 
-                Vector2f::new(0., 0.), 
-                Direction::Right, 
-                0, 
-                200, 
-                6, 
+                configuration.gui.cursor.sprite.size, 
+                configuration.gui.cursor.sprite.display.scale, 
+                75.,
+                50.,
+                0.,
+                0.,
+                Direction::Right,
+                0,
+                configuration.gui.cursor.delay,
+                configuration.gui.cursor.sprite.nb_frames,
                 AnimationMode::Repeated),
+            selected : 1,
             step : 30.,
             min : Vector2f::new(0., 48.),
             max : Vector2f::new(75., 48. * 3.),
@@ -45,21 +59,19 @@ impl<'a> Cursor<'a> {
     }
 
     fn move_up(&mut self) {
-        let y = self.sprite.position.y - self.step;
+        let y = self.sprite.nav.position.y - self.step;
         if y  >= self.min.y {
-            self.sprite.position.y = y;
+            self.sprite.nav.position.y = y;
+            self.selected = self.selected - 1;
         }
     }
 
     fn move_down(&mut self) {
-        let y = self.sprite.position.y + self.step;
+        let y = self.sprite.nav.position.y + self.step;
         if y <= self.max.y {
-            self.sprite.position.y = y;
+            self.sprite.nav.position.y = y;
+            self.selected = self.selected + 1;
         }
-    }
-
-    fn select(&mut self) {
-
     }
 }
 
@@ -70,11 +82,14 @@ pub struct Menu<'a> {
 }
 
 impl<'a> Menu<'a> {
-    pub fn new(sprite_bg : Sprite<'a>, sprite_letters : Sprite<'a>, skull : Sprite<'a>, configuration : &GameConfiguration) -> Self { 
+    pub fn new(sprite_bg : Sprite<'a>, 
+    sprite_letters : Sprite<'a>, 
+    sprite_cursor : Sprite<'a>, 
+    configuration : &Configuration) -> Self { 
         Menu {
             background : sprite_bg,
             letters : sprite_letters,
-            cursor : Cursor::new(skull, configuration)
+            cursor : Cursor::new(sprite_cursor, configuration)
         }
     }
 
@@ -86,7 +101,17 @@ impl<'a> Menu<'a> {
         self.cursor.move_down();
     }
 
-    pub fn draw(&mut self, window : &mut RenderWindow, configuration : &GameConfiguration) {
+    pub fn select(&mut self) -> MenuAction {
+        match self.cursor.selected {
+            1 => MenuAction::Solo,
+            2 => MenuAction::Multi,
+            3 => MenuAction::Params,
+            4 => MenuAction::Cancel,
+            _ => MenuAction::Nothing,
+        }
+    }
+
+    pub fn draw(&mut self, window : &mut RenderWindow, configuration : &Configuration) {
         self.letters.set_scale(Vector2f::new(0.5, 0.5));
         window.draw(&self.background);
         self.cursor.draw(window);
@@ -132,16 +157,16 @@ impl<'a> Menu<'a> {
         window : &mut RenderWindow, 
         text : &str, 
         mut position : Vector2f, 
-        configuration : &GameConfiguration,
+        configuration : &Configuration,
         tab : f32) {
         for c in text.chars() { 
             match self.get_sprite_letter_index_from_char(c) {
                 Some(index) => {
                     let rect = IntRect::new(
-                        index * configuration.texture_pack.size_letter,
+                        index * configuration.gui.fonts.sprite.size,
                         0,
-                        configuration.texture_pack.size_letter,
-                        configuration.texture_pack.size_letter,
+                        configuration.gui.fonts.sprite.size,
+                        configuration.gui.fonts.sprite.size,
                     );
                     //println!("POSITION {}", position.x);
                     self.letters.set_texture_rect(rect);
@@ -159,7 +184,8 @@ impl<'a> Menu<'a> {
 }
 
 impl<'a> InputProcessor for Menu<'a> {
-    fn process_event(&mut self, e: Event) {
+    fn process_event(&mut self, e: Event) -> ResultEvent {
+        let mut res = ResultEvent::Menu;
         match e {
             Event::KeyPressed {
                 code: Key::Down, ..
@@ -173,7 +199,29 @@ impl<'a> InputProcessor for Menu<'a> {
                 println!("KEY PUSH:DOWN");
                 self.on_up();
             }
+            Event::KeyPressed {
+                code: Key::Enter, ..
+            } => {
+                println!("KEY PUSH:Enter");
+                let action = self.select();
+                match action {
+                    MenuAction::Cancel => {
+                        res = ResultEvent::Exit
+                    }
+                    MenuAction::Solo => {
+                        res = ResultEvent::Solo
+                    }
+                    _ => {}
+                }
+            }
+            Event::KeyPressed {
+                code: Key::Escape, ..
+            } => {
+                println!("KEY PUSH:ESC");
+                res = ResultEvent::Exit
+            }
             _ => {}
         }
+        res
     }
 }

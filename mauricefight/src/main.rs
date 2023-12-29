@@ -1,62 +1,86 @@
-use game_configuration::GameConfiguration;
+use animated_sprite::AnimationMode;
+use fighter_common::Fighter;
 use menu::Menu;
-use std::collections::VecDeque;
-use game_inputs::InputState;
+use std::fs::File;
 use 
     sfml::{
         graphics::{
             RenderTarget, RenderWindow, Texture,Sprite,IntRect,View,FloatRect,Image,
             Transformable,
         },
-        system::{Clock, Vector2f},
-        window::{ContextSettings, Event,  Key, Style}
+        system::Vector2f,
+        window::{ContextSettings, Style}
 };
 
+mod configuration;
+mod inputs;
 mod arena;
-mod fighter;
+mod fighter_common;
+mod fighter_maurice;
 mod engine;
 mod menu;
-mod game_configuration;
-mod game_events;
-mod game_common;
-mod game_inputs;
+mod common;
 mod animated_sprite;
 
-fn main() {    
-    let configuration = GameConfiguration::new();
-    let texture_letters = game_common::load_texture(
-        "resources/spriteLetters.png", 
-        configuration.texture_pack.size_letter, 
-        configuration.texture_pack.nb_frames_letters, true, false).unwrap();
-    let mut letters_sprite = Sprite::new();
-    letters_sprite.set_texture(&texture_letters, true);
-    letters_sprite.set_texture_rect(IntRect::new(0, 0, configuration.texture_pack.size_letter, configuration.texture_pack.size_letter));
-    letters_sprite.set_origin(Vector2f::new(16.,16.));
+pub struct ScreenConfiguration {
+    pub view_size: Vector2f,
+    pub view_center: Vector2f,
+    pub ratio: f32,
+    pub aa_level: u32,
+    pub width: u32,
+    pub height: u32,
+}
 
-    let texture_skull = game_common::load_texture(
-        "resources/spriteSkull.png", 
-        configuration.texture_pack.size_skull, 
-        configuration.texture_pack.nb_frames_skull, true, false).unwrap();
-    let mut skull_sprite = Sprite::new();
-    skull_sprite.set_texture(&texture_skull, true);
-    skull_sprite.set_texture_rect(IntRect::new(0, 0, configuration.texture_pack.size_skull, configuration.texture_pack.size_skull));
-    skull_sprite.set_scale(Vector2f::new(0.4, 0.4));
-    skull_sprite.set_origin(Vector2f::new(35., 35.));
+impl ScreenConfiguration {
+    pub fn new() -> Self {
+        ScreenConfiguration {
+            view_size: Vector2f::new(800., 600.),
+            view_center: Vector2f::new(400., 300.),
+            ratio: 2.7,
+            aa_level: 0,
+            width: 800,
+            height: 600,
+        }
+    }
+}
 
-    let background_menu = Image::from_file("resources/textures.png").unwrap();
+fn main() {
+    // load configuration
+    let file = File::open("resources/configuration.json").unwrap();
+    let configuration: configuration::Configuration = serde_json::from_reader(file).unwrap();
+    let screen_configuration = ScreenConfiguration::new();
+
+    // load sprite fonts...
+    let texture_fonts = common::load_texture(
+        &configuration.gui.fonts.sprite.img.as_str(), 
+        configuration.gui.fonts.sprite.size, configuration.gui.fonts.sprite.nb_frames, 
+        true, false).unwrap();
+    let mut sprite_fonts = Sprite::new();
+    sprite_fonts.set_texture(&texture_fonts, true);
+    common::load_sprite(&mut sprite_fonts, configuration.gui.fonts.sprite.size);
+
+    // load sprite cursor...
+    let texture_cursor = common::load_texture(
+        configuration.gui.cursor.sprite.img.as_str(), 
+        configuration.gui.cursor.sprite.size, configuration.gui.cursor.sprite.nb_frames,
+        true, false).unwrap();
+    let mut sprite_cursor = Sprite::new();
+    sprite_cursor.set_texture(&texture_cursor, true);
+    common::load_sprite(&mut sprite_cursor, configuration.gui.cursor.sprite.size);
+
+    // load textures...
+    let background_menu = Image::from_file(configuration.textures.sprite.img.as_str()).unwrap();
     let mut texture_menu = Texture::new().unwrap();
-    let menu_rect = IntRect::new(0,0, configuration.texture_pack.size,configuration.texture_pack.size);
+    let menu_rect = IntRect::new(0,0, configuration.textures.sprite.size,configuration.textures.sprite.size);
     texture_menu.load_from_image(&background_menu, menu_rect).unwrap();
     texture_menu.set_smooth(true);
     texture_menu.set_repeated(true);
     let mut menu_sprite = Sprite::new();
-    menu_sprite.set_texture_rect(IntRect::new(0,0, configuration.screen.width.try_into().unwrap(), configuration.screen.height.try_into().unwrap()));
+    menu_sprite.set_texture_rect(IntRect::new(0,0, screen_configuration.width.try_into().unwrap(), screen_configuration.height.try_into().unwrap()));
     menu_sprite.set_texture(&texture_menu, false);
-    let menu = Menu::new(menu_sprite, letters_sprite, skull_sprite, &configuration);
 
-    let background_arena = Image::from_file("resources/ARENA1.png").unwrap();
-    let x_arena = background_arena.size().x;
-    let y_arena = background_arena.size().y;
+    // load levels sprites
+    let background_arena = Image::from_file(&configuration.levels[0].sprite.img).unwrap();
     let mut texture = Texture::new().unwrap();
     texture
         .load_from_image(
@@ -64,72 +88,80 @@ fn main() {
             IntRect::new(
                 0,
                 0,
-                x_arena.try_into().unwrap(),
-                y_arena.try_into().unwrap(),
+                background_arena.size().x.try_into().unwrap(),
+                background_arena.size().y.try_into().unwrap(),
             ),
         )
         .unwrap();
     texture.set_smooth(true);
     let mut arena_sprite = Sprite::new();
     arena_sprite.set_texture(&texture, true);
-    let arena = arena::Arena::new(arena_sprite);
-    
-    let mut texture_player = Texture::new().unwrap();
-    let current_player_sprite_rect = IntRect::new(0, 0, configuration.sprite.size, configuration.sprite.size);
+
+    // load fighters sprites
+    let mut texture_player : sfml::SfBox<Texture>  = Texture::new().unwrap();
+    let current_player_sprite_rect = IntRect::new(
+        0, 
+        0, 
+        configuration.characters[0].sprite.size, 
+        configuration.characters[0].sprite.size);
     texture_player
         .load_from_file(
-            "resources/spriteHero1.png",
-            IntRect::new(0, 0, configuration.sprite.size * configuration.sprite.nb_frames, configuration.sprite.size),
+            &configuration.characters[0].sprite.img,
+            IntRect::new(
+                0, 
+                0, 
+                configuration.characters[0].sprite.size * configuration.characters[0].sprite.nb_frames, 
+                configuration.characters[0].sprite.size),
         )
         .unwrap();
     texture_player.set_smooth(true);
     let mut player_sprite = Sprite::new();
     player_sprite.set_texture(&texture_player, true);
     player_sprite.set_texture_rect(current_player_sprite_rect);
-    player_sprite.set_scale(Vector2f::new(configuration.sprite.scale, configuration.sprite.scale));
-    player_sprite.set_origin(Vector2f::new(configuration.sprite.x_center, configuration.sprite.y_center));
+    player_sprite.set_scale(Vector2f::new(configuration.characters[0].sprite.display.scale, configuration.characters[0].sprite.display.scale));
+    player_sprite.set_origin(Vector2f::new(configuration.characters[0].sprite.display.x_origin, configuration.characters[0].sprite.display.y_origin));
     
-    let player = fighter::Fighter {
-        position : Vector2f::new(120.,150.),
-        speed : Vector2f::new(0.,0.),
-        sprite : player_sprite,
-        state : fighter::State::default(),
-        input_state : InputState::new(),
-        actions : VecDeque::new(),
-        clock : Clock::start(),
-        running_action : game_events::RunAction::Standing,
-        running_direction : game_common::Direction::Right,
-        ko : true,
-    };
-    
+     
+    // load modules
+    let menu = Menu::new(menu_sprite, sprite_fonts, sprite_cursor, &configuration);
+    let arena = arena::Arena::new(arena_sprite);
+    let maurice_fighter = Box::new(fighter_maurice::Maurice::new(
+        &configuration.characters[0],
+        player_sprite,
+        120.0, 
+        150.0, 
+        "idle",
+        AnimationMode::Repeated,
+        true,
+    ));
+
+    // create window
     let context_settings = ContextSettings {
-        antialiasing_level: configuration.screen.aa_level,
+        antialiasing_level: screen_configuration.aa_level,
         ..Default::default()
     };
     let mut window = RenderWindow::new(
-        (configuration.screen.width, configuration.screen.height),
+        (screen_configuration.width, screen_configuration.height),
         "Maurice 2D",
         Style::CLOSE,
         &context_settings,
     );
     window.set_framerate_limit(60);
     window.set_vertical_sync_enabled(true);
-    let mut view = View::new(configuration.screen.view_center, configuration.screen.view_size);
-    view.set_viewport(FloatRect::new(0., 0., configuration.screen.ratio, configuration.screen.ratio));
+    let mut view = View::new(screen_configuration.view_center, screen_configuration.view_size);
+    view.set_viewport(FloatRect::new(0., 0., screen_configuration.ratio, screen_configuration.ratio));
     window.set_view(&view);
 
-    let mut engine = engine::MauriceFight2dEngine::new(window, view, arena, player, menu, configuration);
+    // load fighters
+    let mut fighters : Vec<Box<dyn Fighter>> = Vec::new();
+    fighters.push(maurice_fighter);
+    let mut engine = engine::MauriceFight2dEngine::new(window, view, arena, fighters, "maurice", menu, configuration);
 
+    // GAME LOOP
     loop {
         while let Some(event) = engine.window.poll_event() {
-            match event {
-                Event::Closed
-                | Event::KeyPressed {
-                    code: Key::Escape, ..
-                } => return,
-                _ => {
-                    engine.process_input_event(event);
-                }
+            if engine.process_input_event(event) {
+                return;
             }
         }
         engine.render_frame();

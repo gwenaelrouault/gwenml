@@ -4,7 +4,7 @@ use sfml::window::Event;
 
 
 pub trait InputProcessor {
-    fn process_event(&mut self, e: Event);
+    fn process_event(&mut self, e: Event) -> bool;
 }
 
 #[derive(Copy, Clone, Debug)]
