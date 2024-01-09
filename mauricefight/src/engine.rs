@@ -1,12 +1,11 @@
 use crate::arena::Arena;
-use crate::configuration::Configuration;
-use crate::fighter_common::Fighter;
-use crate::inputs::{InputProcessor, ResultEvent};
-use crate::menu::Menu;
+use crate::configuration::resources::{self, GameResources};
+use crate::fighters::fighter::Fighter;
+use crate::gui::menu::Menu;
+use crate::common::{InputProcessor, ResultEvent};
 use sfml::SfBox;
 use sfml::{
     graphics::{Color, RenderTarget, RenderWindow, View},
-    system::Vector2f,
     window::Event,
 };
 
@@ -20,11 +19,9 @@ pub struct MauriceFight2dEngine<'a> {
     pub window: RenderWindow,
     view: SfBox<View>,
     arena: Arena<'a>,
-    fighters: Vec<Box<dyn Fighter + 'a>>,
-    selected_fighter: &'a str,
+    fighters: Vec<Box<Fighter<'a>>>,
     display: DisplayState,
     menu: Menu<'a>,
-    configuration: Configuration,
 }
 
 impl<'a> MauriceFight2dEngine<'a> {
@@ -32,20 +29,15 @@ impl<'a> MauriceFight2dEngine<'a> {
         window: RenderWindow,
         view: SfBox<View>,
         arena: Arena<'a>,
-        fighters: Vec<Box<dyn Fighter + 'a>>,
-        selected_fighter: &'a str,
-        menu: Menu<'a>,
-        configuration: Configuration,
+        resources: &'a GameResources,
     ) -> Self {
         MauriceFight2dEngine {
             window,
             view,
             arena,
-            fighters,
-            selected_fighter,
+            fighters: Vec::new(),
             display: DisplayState::Menu,
-            menu,
-            configuration,
+            menu: Menu::new(resources),
         }
     }
 
@@ -53,49 +45,47 @@ impl<'a> MauriceFight2dEngine<'a> {
         self.arena.draw(&mut self.window);
     }
 
-    fn draw_update_frame_fighter(&mut self) {
-        for fighter in &mut self.fighters {
-            fighter.draw(&mut self.window);
-        }
-    }
-
-    fn draw_update_frame(&mut self) {
+    fn draw_update_frame(&mut self, resources: &GameResources) {
         match self.display {
             DisplayState::Game => {
                 self.draw_update_frame_arena();
-                let selected = self
-                    .fighters
-                    .iter()
-                    .find(|x| x.get_name().eq_ignore_ascii_case(self.selected_fighter));
-                match selected {
-                    Some(fighter) => {
-                        self.view.move_(fighter.get_speed());
+                for fighter in self.fighters.iter_mut() {
+                    //println!("FIGHTER : {}", fighter.get_name());
+                    fighter.on_frame_update(&mut self.window);
+                    if fighter.selected {
+                        self.view.move_(fighter.get_speed())
                     }
-                    _ => {}
                 }
-
-                self.draw_update_frame_fighter();
-                self.window.set_view(&self.view);
             }
             DisplayState::Menu => {
-                self.menu.draw(&mut self.window, &self.configuration);
+                self.menu.draw(&mut self.window, resources);
             }
         }
     }
 
-    pub fn render_frame(&mut self) {
+    pub fn render_frame(&mut self, resources: &GameResources) {
         self.window.clear(Color::BLACK);
-        self.draw_update_frame();
+        self.draw_update_frame(resources);
+        self.window.set_view(&self.view);
         self.window.display();
     }
 
-    pub fn process_input_event(&mut self, e: Event) -> bool {
+    fn load_solo_level(&mut self, resources: &'a GameResources) {
+        self.fighters.clear();
+        self.fighters.push(Box::new(Fighter::new(
+            "Maurice", &resources, "Maurice", 120., 150., true,
+        )));
+    }
+
+    pub fn process_input_event(&mut self, e: Event, resources: &'a GameResources) -> bool {
         let mut end_game = false;
         match self.display {
             DisplayState::Game => {
                 for fighter in &mut self.fighters {
-                    if fighter.process_input_event(e) == ResultEvent::Exit {
-                        self.display = DisplayState::Menu;
+                    if fighter.selected {
+                        if fighter.as_mut().process_event(e) == ResultEvent::Menu {
+                            self.display = DisplayState::Menu;
+                        }
                     }
                 }
             }
@@ -105,6 +95,7 @@ impl<'a> MauriceFight2dEngine<'a> {
                 }
                 ResultEvent::Solo => {
                     self.display = DisplayState::Game;
+                    self.load_solo_level(resources);
                 }
                 _ => {}
             },

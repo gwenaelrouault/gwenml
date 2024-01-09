@@ -75,7 +75,6 @@ impl std::fmt::Display for ActionConfiguration {
     }
 }
 
-
 #[derive(Deserialize,Debug, Clone)]
 pub struct CharacterConfiguration {
     pub name : String,
@@ -101,4 +100,11 @@ pub struct Configuration {
     pub characters : Vec<CharacterConfiguration>,
     pub gui : GuiConfiguration,
     pub textures : TexturesConfiguration,
+}
+
+impl Configuration {
+    pub fn get_character(&self, name : &str) -> Option<&CharacterConfiguration> {
+        println!("search {}", name);
+        self.characters.iter().find(|x| x.name.eq_ignore_ascii_case(name))
+    }
 }

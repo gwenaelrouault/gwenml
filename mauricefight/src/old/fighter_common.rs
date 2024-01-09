@@ -1,8 +1,8 @@
-use crate::animated_sprite::AnimatedSprite;
-use crate::animated_sprite::AnimationMode;
+use crate::sprites::animated_sprite::AnimatedSprite;
+use crate::sprites::animated_sprite::AnimationMode;
 use crate::common::Direction;
-use crate::configuration::ActionConfiguration;
-use crate::configuration::CharacterConfiguration;
+use crate::configuration::configuration::ActionConfiguration;
+use crate::configuration::configuration::CharacterConfiguration;
 use crate::inputs::ResultEvent;
 use sfml::graphics::FloatRect;
 use sfml::graphics::RectangleShape;
@@ -70,18 +70,17 @@ impl HitBox {
 
 }
 
-pub struct Character<'a> {
+pub struct Character {
     pub configuration: CharacterConfiguration,
     current_action_configuration: ActionConfiguration,
-    sprite: AnimatedSprite<'a>,
+    sprite: AnimatedSprite,
     pub is_human: bool,
     hit_box: HitBox,
 }
 
-impl<'a> Character<'a> {
+impl Character {
     pub fn new(
         character: &CharacterConfiguration,
-        sprite: Sprite<'a>,
         x: f32,
         y: f32,
         default_action: &str,
@@ -94,7 +93,6 @@ impl<'a> Character<'a> {
             configuration: character.clone(),
             current_action_configuration: default_action_config.clone(),
             sprite: AnimatedSprite::new(
-                sprite,
                 character.sprite.size,
                 character.sprite.display.scale,
                 x,

@@ -1,8 +1,8 @@
 use crate::common::Direction;
 use crate::inputs::ResultEvent;
 use crate::{
-    animated_sprite::AnimationMode,
-    configuration::CharacterConfiguration,
+    sprites::animated_sprite::AnimationMode,
+    configuration::configuration::CharacterConfiguration,
     fighter_common::{Character, Fighter},
 };
 use sfml::graphics::Sprite;
@@ -11,7 +11,7 @@ use std::collections::VecDeque;
 use std::fmt;
 
 #[derive(Copy, Clone, Debug)]
-pub struct InputState {
+struct InputState {
     flag_crouch: bool,
     flag_move: bool,
     direction: Direction,
@@ -27,6 +27,10 @@ impl InputState {
             flag_attack: false,
         }
     }
+
+    pub fn on_end_action(&mut self) {
+        self.flag_attack = false;
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -36,6 +40,7 @@ enum MauriceRun {
     Crouch,
     MiddleKick,
     Punch,
+    CrouchPunch,
 }
 
 impl fmt::Display for MauriceRun {
@@ -45,6 +50,7 @@ impl fmt::Display for MauriceRun {
             MauriceRun::Crouch => write!(f, "crouch"),
             MauriceRun::MiddleKick=> write!(f, "middle_kick"),
             MauriceRun::Punch=> write!(f, "punch"),
+            MauriceRun::CrouchPunch=> write!(f, "crouch_punch"),
             _ => write!(f, "idle"),
         }
     }
@@ -83,7 +89,7 @@ impl<'a> Maurice<'a> {
         is_human: bool,
     ) -> Self {
         Maurice {
-            character: Character::new(configuration, sprite, x, y, default_action, mode, is_human),
+            character: Character::new(configuration, &sprite, x, y, default_action, mode, is_human),
             input_state: InputState::new(),
             events_queue: VecDeque::new(),
             current_action: MauriceRun::Idle,
@@ -152,6 +158,10 @@ impl<'a> Maurice<'a> {
                 println!("KEY POP - RIGHT rel");
                 self.input_state.flag_crouch = false;
             },
+            MauriceInput::Punch => {
+                println!("KEY POP - RIGHT rel");
+                self.input_state.flag_attack = true;
+            },
             _ => {}
         }
     }
@@ -159,8 +169,13 @@ impl<'a> Maurice<'a> {
     fn get_running_action_from_current_state(&self) -> (MauriceRun, Direction) {
         match self.input_state {
             InputState {
-                flag_crouch: true, ..
+                flag_crouch: true,
+                flag_attack: false, ..
             } => (MauriceRun::Crouch, self.input_state.direction),
+            InputState {
+                flag_crouch: true,
+                flag_attack: true, ..
+            } => (MauriceRun::CrouchPunch, self.input_state.direction),
             InputState {
                 flag_crouch: false,
                 flag_move: true,
@@ -189,26 +204,18 @@ impl<'a> Maurice<'a> {
                 println!("---------------NEW ACTION {}->{}", self.current_action,_r);
                 self.current_direction = _d;
                 self.current_action = _r;
-                let mode = if self.current_action == MauriceRun::Idle || self.current_action == MauriceRun::Walking {AnimationMode::Repeated} else  {AnimationMode::OneShot};
+                let mode = if self.current_action == MauriceRun::Idle || self.current_action == MauriceRun::Walking || self.current_action == MauriceRun::Crouch {AnimationMode::Repeated} else  {AnimationMode::OneShot};
                 self.character.start_action(self.current_action.to_string().as_str(), mode, self.current_direction, window);
             }
             // continue current action
             _ => {
-                self.character.on_draw(window); 
+                if self.character.on_draw(window) {
+                    self.input_state.on_end_action();
+                } 
             }
         }
     }
 
-    fn on_input_event(&mut self, e: Event) -> ResultEvent {
-        let action = self.get_action_from_input(e);
-        let res = if action == MauriceInput::Exit {
-            ResultEvent::Exit
-        } else {
-            ResultEvent::Solo
-        };
-        self.events_queue.push_back(action);
-        res
-    }
 }
 
 impl<'a> Fighter for Maurice<'a> {
@@ -225,6 +232,13 @@ impl<'a> Fighter for Maurice<'a> {
     }
 
     fn process_input_event(&mut self, evt: sfml::window::Event) -> ResultEvent {
-        self.on_input_event(evt)
+        let action = self.get_action_from_input(evt);
+        let res = if action == MauriceInput::Exit {
+            ResultEvent::Exit
+        } else {
+            ResultEvent::Solo
+        };
+        self.events_queue.push_back(action);
+        res
     }
 }

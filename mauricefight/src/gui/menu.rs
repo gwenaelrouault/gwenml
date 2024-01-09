@@ -1,8 +1,7 @@
 use crate::common::Direction;
-use crate::inputs::InputProcessor;
-use crate::inputs::ResultEvent;
-use crate::{configuration::Configuration, animated_sprite::AnimatedSprite};
-use crate::animated_sprite::AnimationMode;
+use crate::common::InputProcessor;
+use crate::common::ResultEvent;
+use crate::{configuration::resources::GameResources, sprites::animated_sprite::AnimatedSprite};
 use sfml::window::{Event, Key};
 use 
    sfml::{
@@ -22,7 +21,7 @@ enum MenuAction {
     Params
 }
 
-struct Cursor<'a> {
+pub struct Cursor<'a> {
     sprite : AnimatedSprite<'a>,
     selected : i32,
     step : f32,
@@ -31,21 +30,21 @@ struct Cursor<'a> {
 }
 
 impl<'a> Cursor<'a> {
-    pub fn new(sprite : Sprite<'a>, configuration : &Configuration) -> Self {
+    pub fn new(resources : &'a GameResources) -> Self {
         Cursor {
             sprite : AnimatedSprite::new(
-                sprite, 
-                configuration.gui.cursor.sprite.size, 
-                configuration.gui.cursor.sprite.display.scale, 
+                resources,
+                "cursor", 
+                resources.configuration.gui.cursor.sprite.size, 
+                resources.configuration.gui.cursor.sprite.display.scale, 
                 75.,
                 50.,
                 0.,
                 0.,
                 Direction::Right,
                 0,
-                configuration.gui.cursor.delay,
-                configuration.gui.cursor.sprite.nb_frames,
-                AnimationMode::Repeated),
+                resources.configuration.gui.cursor.delay,
+                resources.configuration.gui.cursor.sprite.nb_frames),
             selected : 1,
             step : 30.,
             min : Vector2f::new(0., 48.),
@@ -54,7 +53,10 @@ impl<'a> Cursor<'a> {
     }
 
     fn draw(&mut self, window : &mut RenderWindow) {
-        self.sprite.next_frame(window);
+        let frame_res = self.sprite.next_frame(Direction::Right, window);
+        if frame_res.0 {
+            self.sprite.restart_animation();
+        }
     }
 
     fn move_up(&mut self) {
@@ -76,19 +78,16 @@ impl<'a> Cursor<'a> {
 
 pub struct Menu<'a> {
     background : Sprite<'a>,
-    letters : Sprite<'a>,
+    fonts : Sprite<'a>,
     cursor : Cursor<'a>,
 }
 
 impl<'a> Menu<'a> {
-    pub fn new(sprite_bg : Sprite<'a>, 
-    sprite_letters : Sprite<'a>, 
-    sprite_cursor : Sprite<'a>, 
-    configuration : &Configuration) -> Self { 
+    pub fn new(resources : &'a GameResources) -> Self { 
         Menu {
-            background : sprite_bg,
-            letters : sprite_letters,
-            cursor : Cursor::new(sprite_cursor, configuration)
+            background : resources.get_sprite("background"),
+            fonts : resources.get_sprite("fonts"),
+            cursor : Cursor::new(resources)
         }
     }
 
@@ -100,7 +99,7 @@ impl<'a> Menu<'a> {
         self.cursor.move_down();
     }
 
-    pub fn select(&mut self) -> MenuAction {
+    fn select(&mut self) -> MenuAction {
         match self.cursor.selected {
             1 => MenuAction::Solo,
             2 => MenuAction::Multi,
@@ -110,14 +109,14 @@ impl<'a> Menu<'a> {
         }
     }
 
-    pub fn draw(&mut self, window : &mut RenderWindow, configuration : &Configuration) {
-        self.letters.set_scale(Vector2f::new(0.5, 0.5));
+    pub fn draw(&mut self, window : &mut RenderWindow, resources : &GameResources) {
+        self.fonts.set_scale(Vector2f::new(0.5, 0.5));
         window.draw(&self.background);
         self.cursor.draw(window);
-        self.print(window, "mode solo", Vector2f::new(100., 50.), configuration, 10.);
-        self.print(window, "multijoueur", Vector2f::new(100., 80.), configuration, 10.);
-        self.print(window, "parametres", Vector2f::new(100., 110.), configuration, 10.);
-        self.print(window, "quitter", Vector2f::new(100., 140.), configuration, 10.);
+        self.print(window, "mode solo", Vector2f::new(100., 50.), resources, 10.);
+        self.print(window, "multijoueur", Vector2f::new(100., 80.), resources, 10.);
+        self.print(window, "parametres", Vector2f::new(100., 110.), resources, 10.);
+        self.print(window, "quitter", Vector2f::new(100., 140.), resources, 10.);
     }
 
     fn get_sprite_letter_index_from_char(&self, c : char) -> Option<i32> {
@@ -156,22 +155,22 @@ impl<'a> Menu<'a> {
         window : &mut RenderWindow, 
         text : &str, 
         mut position : Vector2f, 
-        configuration : &Configuration,
+        resources : &GameResources,
         tab : f32) {
         for c in text.chars() { 
             match self.get_sprite_letter_index_from_char(c) {
                 Some(index) => {
                     let rect = IntRect::new(
-                        index * configuration.gui.fonts.sprite.size,
+                        index * resources.configuration.gui.fonts.sprite.size,
                         0,
-                        configuration.gui.fonts.sprite.size,
-                        configuration.gui.fonts.sprite.size,
+                        resources.configuration.gui.fonts.sprite.size,
+                        resources.configuration.gui.fonts.sprite.size,
                     );
                     //println!("POSITION {}", position.x);
-                    self.letters.set_texture_rect(rect);
-                    self.letters.set_position(position);
+                    self.fonts.set_texture_rect(rect);
+                    self.fonts.set_position(position);
                    
-                    window.draw(&self.letters);
+                    window.draw(&self.fonts);
                 },
                 None => {
                     //WHITESPACE
