@@ -1,220 +1,23 @@
 use crate::common::Direction;
-use crate::configuration::resources::GameResources;
 use crate::common::InputProcessor;
 use crate::common::ResultEvent;
+use crate::configuration::resources::GameResources;
+use crate::fighters::fighter_crouch::FighterCrouch;
+use crate::fighters::fighter_crouch::FighterEndCrouch;
+use crate::fighters::fighter_input::FighterInputState;
+use crate::fighters::fighter_move::FighterMove;
+use crate::fighters::fighter_state::FighterState;
+use crate::fighters::fighter_state::State;
+use crate::fighters::fighter_waiting::FighterWaiting;
 use crate::sprites::animated_sprite::AnimatedSprite;
 use sfml::graphics::RenderWindow;
 use sfml::system::Vector2f;
 use sfml::window::Event;
 use sfml::window::Key;
 use std::collections::HashMap;
-use std::fmt;
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-enum State {
-    Idle,
-    Crouch,
-    Move,
-    Ko,
-}
-
-pub struct FighterAnimation {
-    pub sprite_index: i32,
-    pub nb_frames: i32,
-    pub delay: i32,
-    pub direction: Direction,
-    pub speed: f32,
-}
-
-impl FighterAnimation {
-    pub fn new(
-        resources: &GameResources,
-        name: &str,
-        action_name: &str,
-        direction: Direction,
-    ) -> Self {
-        println!("perso : {}, action :{}", name, action_name);
-        let action_config = resources
-            .configuration
-            .get_character(name)
-            .unwrap()
-            .get_action_configuration(action_name)
-            .unwrap();
-        FighterAnimation {
-            sprite_index: action_config.sequence.index,
-            nb_frames: action_config.sequence.nb_frames,
-            delay: action_config.sequence.delay,
-            direction,
-            speed: action_config.sequence.speed,
-        }
-    }
-}
-
-impl fmt::Display for State {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            State::Move => write!(f, "walking"),
-            State::Crouch => write!(f, "crouch"),
-            _ => write!(f, "idle"),
-        }
-    }
-}
-
-trait FighterState {
-    fn on_move(&mut self, direction: Direction) -> (State, Direction);
-
-    fn on_end_move(&mut self) -> (State, Direction);
-
-    fn on_frame_update(
-        &mut self,
-        sprite: &mut AnimatedSprite,
-        window: &mut RenderWindow,
-    ) -> (State, Direction);
-
-    fn on_initialize(&mut self, sprite: &mut AnimatedSprite, direction: Direction);
-}
-
-struct FighterWaiting {
-    animation: FighterAnimation,
-}
-
-impl FighterWaiting {
-    pub fn new(name: &str, resources: &GameResources, direction: Direction) -> Self {
-        FighterWaiting {
-            animation: FighterAnimation::new(
-                resources,
-                name,
-                State::Idle.to_string().as_str(),
-                direction,
-            ),
-        }
-    }
-}
-
-struct FighterCrouch {
-    animation: FighterAnimation,
-}
-
-impl FighterCrouch {
-    pub fn new(name: &str, resources: &GameResources, direction: Direction) -> Self {
-        FighterCrouch {
-            animation: FighterAnimation::new(
-                resources,
-                name,
-                State::Crouch.to_string().as_str(),
-                direction,
-            ),
-        }
-    }
-}
-
-struct FighterMove {
-    animation: FighterAnimation,
-}
-
-impl FighterMove {
-    pub fn new(name: &str, resources: &GameResources, direction: Direction) -> Self {
-        FighterMove {
-            animation: FighterAnimation::new(
-                resources,
-                name,
-                State::Move.to_string().as_str(),
-                direction,
-            ),
-        }
-    }
-}
-
-impl FighterState for FighterWaiting {
-    fn on_move(&mut self, direction: Direction) -> (State, Direction) {
-        (State::Move, direction)
-    }
-
-    fn on_end_move(&mut self) -> (State, Direction) {
-        (State::Idle, self.animation.direction)
-    }
-
-    fn on_frame_update(&mut self, sprite: &mut AnimatedSprite, window: &mut RenderWindow) -> (State, Direction) {
-        //println!("FRAME UPDATE");
-        let frame_res = sprite.next_frame(self.animation.direction, window);
-        if frame_res.0 {
-            sprite.restart_animation();
-        }
-        (State::Idle, self.animation.direction)
-    }
-
-    fn on_initialize(&mut self, sprite: &mut AnimatedSprite, direction: Direction) {
-        self.animation.direction = direction;
-        sprite.reset_animation(
-            self.animation.sprite_index,
-            self.animation.delay,
-            self.animation.nb_frames,
-            direction,
-            self.animation.speed,
-        );
-    }
-}
-
-impl FighterState for FighterMove {
-    fn on_move(&mut self, direction: Direction) -> (State, Direction) {
-        self.animation.direction = direction;
-        (State::Move, self.animation.direction)
-    }
-
-    fn on_end_move(&mut self) -> (State, Direction) {
-        (State::Idle, self.animation.direction)
-    }
-
-    fn on_frame_update(&mut self, sprite: &mut AnimatedSprite, window: &mut RenderWindow) -> (State, Direction) {
-        let frame_res = sprite.next_frame(self.animation.direction, window);
-        if frame_res.0 {
-            sprite.restart_animation();
-        }
-        (State::Move, self.animation.direction)
-    }
-
-    fn on_initialize(&mut self, sprite: &mut AnimatedSprite, direction: Direction) {
-        self.animation.direction = direction;
-        sprite.reset_animation(
-            self.animation.sprite_index,
-            self.animation.delay,
-            self.animation.nb_frames,
-            self.animation.direction,
-            self.animation.speed,
-        );
-    }
-}
-
-impl FighterState for FighterCrouch {
-    fn on_move(&mut self, direction: Direction) -> (State, Direction) {
-        self.animation.direction = direction;
-        (State::Crouch, self.animation.direction)
-    }
-
-    fn on_end_move(&mut self) -> (State, Direction) {
-        (State::Crouch, self.animation.direction)
-    }
-
-    fn on_frame_update(&mut self, sprite: &mut AnimatedSprite, window: &mut RenderWindow) -> (State, Direction) {
-        let mut state = State::Crouch;
-        let frame_res = sprite.next_frame(self.animation.direction, window);
-        if frame_res.0 {
-            state = State::Idle;
-        }
-        (state, self.animation.direction)
-    }
-
-    fn on_initialize(&mut self, sprite: &mut AnimatedSprite, direction: Direction) {
-        self.animation.direction = direction;
-        sprite.reset_animation(
-            self.animation.sprite_index,
-            self.animation.delay,
-            self.animation.nb_frames,
-            direction,
-            self.animation.speed,
-        );
-    }
-}
+use super::fighter_high_kick::FighterHighKick;
+use crate::fighters::fighter_punch::FighterLeftPunch;
+use crate::fighters::fighter_punch::FighterRightPunch;
 
 pub struct Fighter<'a> {
     name: String,
@@ -225,10 +28,18 @@ pub struct Fighter<'a> {
     sprite: AnimatedSprite<'a>,
     is_new_state: bool,
     pub selected: bool,
+    input_state: FighterInputState,
 }
 
 impl<'a> Fighter<'a> {
-    pub fn new(name: &str, resources: &'a GameResources, sprite: &str, x: f32, y: f32, selected: bool) -> Self {
+    pub fn new(
+        name: &str,
+        resources: &'a GameResources,
+        sprite: &str,
+        x: f32,
+        y: f32,
+        selected: bool,
+    ) -> Self {
         let mut states: HashMap<State, Box<dyn FighterState>> = HashMap::new();
         states.insert(
             State::Idle,
@@ -241,6 +52,22 @@ impl<'a> Fighter<'a> {
         states.insert(
             State::Move,
             Box::new(FighterMove::new(name, resources, Direction::Right)),
+        );
+        states.insert(
+            State::EndCrouch,
+            Box::new(FighterEndCrouch::new(name, resources, Direction::Right)),
+        );
+        states.insert(
+            State::HighKick,
+            Box::new(FighterHighKick::new(name, resources, Direction::Right)),
+        );
+        states.insert(
+            State::LeftPunch,
+            Box::new(FighterLeftPunch::new(name, resources, Direction::Right)),
+        );
+        states.insert(
+            State::RightPunch,
+            Box::new(FighterRightPunch::new(name, resources, Direction::Right)),
         );
         let configuration = resources.configuration.get_character(name).unwrap();
         let default_action_config = configuration.get_action_configuration("idle").unwrap();
@@ -266,6 +93,7 @@ impl<'a> Fighter<'a> {
             ),
             is_new_state: true,
             selected,
+            input_state: FighterInputState::new(),
         }
     }
 
@@ -274,12 +102,23 @@ impl<'a> Fighter<'a> {
         //println!("STATE {}", self.current_state);
         match _state {
             Some(s) => {
-                if self.is_new_state {    
-                    s.on_initialize(&mut self.sprite, self.current_direction);
+                if self.is_new_state {
+                    let animation_state = s.get_animation_state();
+                    self.sprite.reset_animation(
+                        animation_state.sprite_index,
+                        animation_state.delay, 
+                        animation_state.nb_frames, 
+                        self.current_direction, 
+                        animation_state.speed, 
+                    );
                     self.is_new_state = false;
                 }
-                let next_state = s.on_frame_update(&mut self.sprite, window);
+                let next_state = s.on_frame_update(&mut self.sprite, &self.input_state, window);
                 if next_state.0 != self.current_state || next_state.1 != self.current_direction {
+                    println!(
+                        "change : state : {}, direction : {}",
+                        self.current_state, self.current_direction
+                    );
                     self.current_state = next_state.0;
                     self.current_direction = next_state.1;
                     self.is_new_state = true;
@@ -296,37 +135,6 @@ impl<'a> Fighter<'a> {
     pub fn get_name(&self) -> &str {
         self.name.as_str()
     }
-
-    fn consume_input(&mut self, e: sfml::window::Event)  -> (State, Direction) {
-        let mut _state = self.states.get_mut(&self.current_state);
-        match _state {
-            Some(s) => {
-                match e {
-                    Event::KeyPressed {
-                        code: Key::Right, ..
-                    } => s.on_move(Direction::Right),
-                    Event::KeyReleased {
-                        code: Key::Right, ..
-                    } => s.on_end_move(),
-                    Event::KeyPressed {
-                        code: Key::Left, ..
-                    } => s.on_move(Direction::Left),
-                    Event::KeyReleased {
-                        code: Key::Left, ..
-                    } => s.on_end_move(),
-                    Event::KeyPressed {
-                        code: Key::Down, ..
-                    } => s.on_move(Direction::Right),
-                    Event::KeyReleased {
-                        code: Key::Down, ..
-                    } => s.on_end_move(),
-                    _ => (self.current_state,self.current_direction)
-                }
-            }
-            _ => (self.current_state,self.current_direction)
-        }
-
-    }
 }
 
 impl<'a> InputProcessor for Fighter<'a> {
@@ -336,15 +144,27 @@ impl<'a> InputProcessor for Fighter<'a> {
                 code: Key::Escape, ..
             } => ResultEvent::Menu,
             _ => {
-                let action_result = self.consume_input(e);
-                if action_result.0 != self.current_state || action_result.1 != self.current_direction {
-                    self.current_state = action_result.0;
-                    self.current_direction = action_result.1;
-                    println!("change : direction : {}", self.current_direction);
-                    self.is_new_state = true;
+                let input_event = self.input_state.on_input(e);
+                let mut _state = self.states.get_mut(&self.current_state);
+                match _state {
+                    Some(s) => {
+                        let action_result = s.on_event(input_event, &self.input_state);
+                        if action_result.0 != self.current_state
+                            || action_result.1 != self.current_direction
+                        {
+                            self.current_state = action_result.0;
+                            self.current_direction = action_result.1;
+                            println!(
+                                "change : state : {}, direction : {}",
+                                self.current_state, self.current_direction
+                            );
+                            self.is_new_state = true;
+                        }
+                        ResultEvent::Solo
+                    }
+                    _ => ResultEvent::Solo
                 }
-                ResultEvent::Solo
             }
-        }        
+        }
     }
 }

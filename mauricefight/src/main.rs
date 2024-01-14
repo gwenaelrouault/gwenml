@@ -26,6 +26,13 @@ mod sprites {
     pub  mod animated_sprite;
 }
 mod fighters {
+    pub mod fighter_input;
+    pub mod fighter_state;
+    pub mod fighter_punch;
+    pub mod fighter_waiting;
+    pub mod fighter_move;
+    pub mod fighter_crouch;
+    pub mod fighter_high_kick;
     pub mod fighter;
 }
 
